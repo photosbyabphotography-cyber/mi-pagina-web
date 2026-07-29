@@ -15,7 +15,7 @@ assets/
   photos/
 
 ## Datos integrados
-WhatsApp: 
+WhatsApp: 956 815 8084
 Email: photosbyabphotography@gmail.com
 Ciudades: Laredo, San Antonio y Corpus Christi
 

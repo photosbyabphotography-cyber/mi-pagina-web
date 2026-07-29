@@ -1235,3 +1235,37 @@ body.lightbox-open { overflow: hidden; }
   .lightbox-prev { left: 8px !important; }
   .lightbox-next { right: 8px !important; }
 }
+
+/* V10 — Cloudflare Pages stable lightbox
+   Closed by default. Opens only after a gallery image is selected. */
+.lightbox {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+.lightbox.open {
+  display: flex !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+}
+
+.lightbox:not(.open) .lightbox-arrow,
+.lightbox:not(.open) .lightbox-close,
+.lightbox:not(.open) .lightbox-count,
+.lightbox:not(.open) img {
+  display: none !important;
+}
+
+.lightbox.open .lightbox-arrow,
+.lightbox.open .lightbox-close,
+.lightbox.open .lightbox-count,
+.lightbox.open img {
+  display: flex !important;
+}
+
+.lightbox.open img {
+  display: block !important;
+}

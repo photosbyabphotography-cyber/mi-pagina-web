@@ -32,6 +32,14 @@ const lightboxPrev = document.querySelector(".lightbox-prev");
 const lightboxNext = document.querySelector(".lightbox-next");
 const lightboxCount = document.querySelector(".lightbox-count");
 const galleryItems = Array.from(document.querySelectorAll(".portfolio-lightbox-item, .gallery-item"));
+
+// V10: always start with the gallery viewer closed.
+if (lightbox) {
+  lightbox.classList.remove("open", "controls-hidden");
+  lightbox.setAttribute("aria-hidden", "true");
+}
+if (lightboxImg) lightboxImg.removeAttribute("src");
+document.body.classList.remove("lightbox-open");
 let currentGalleryIndex = 0;
 let touchStartX = 0;
 let lightboxScrollY = 0;
