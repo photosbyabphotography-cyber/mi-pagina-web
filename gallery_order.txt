@@ -1,0 +1,7 @@
+Gallery order preserved exactly by ZIP upload order and each ZIP's internal file order:
+1. workshop (4 photos)
+2. samantha (3 photos)
+3. karla (1 photos)
+4. itzamar (6 photos)
+5. andy (2 photos)
+6. alondra (12 photos)

@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AB Studio Portal</title>
+<style>
+:root{--ink:#24211f;--paper:#f7f2ed;--line:#d9cec5;--white:#fff;--muted:#766d68}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:var(--paper);color:var(--ink)}
+header{padding:22px 5vw;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;background:#fff}
+.brand{letter-spacing:.28em;font-family:Georgia,serif}
+.badge{font-size:11px;padding:7px 10px;border:1px solid #a88f80;border-radius:99px}
+main{max-width:1200px;margin:34px auto;padding:0 20px}
+.hidden{display:none!important}
+.login-wrap{min-height:70vh;display:grid;place-items:center}
+.login-card{width:min(100%,430px);background:#fff;border:1px solid var(--line);border-radius:14px;padding:30px}
+h1,h2{font-family:Georgia,serif;font-weight:400}
+input,select,textarea{width:100%;padding:12px;margin-top:7px;border:1px solid var(--line);background:#fff;font:inherit}
+label{font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+button,a.btn{border:0;padding:13px 18px;background:#24211f;color:#fff;text-decoration:none;cursor:pointer}
+.secondary{background:#eee!important;color:#222!important}
+.portal{display:grid;grid-template-columns:260px 1fr;gap:28px}
+aside,.card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:22px}
+nav a{display:block;padding:13px 0;color:inherit;text-decoration:none;border-bottom:1px solid #eee}
+nav a.active{font-weight:700}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.full{grid-column:1/-1}
+.actions{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap}
+.note{font-size:12px;color:var(--muted);line-height:1.5}
+.status{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:22px}
+.stat{padding:16px;background:#fff;border:1px solid var(--line)}
+.msg{margin-top:14px;padding:11px;border-radius:8px;font-size:13px;display:none}
+.msg.ok{display:block;background:#eaf5ec;border:1px solid #bed6c2}
+.msg.err{display:block;background:#fdecec;border:1px solid #e2bcbc}
+.top-actions{display:flex;gap:8px;align-items:center}
+@media(max-width:800px){.portal{grid-template-columns:1fr}.grid{grid-template-columns:1fr}.status{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">AB PHOTOGRAPHY</div>
+  <div class="top-actions">
+    <span class="badge">STUDIO PORTAL</span>
+    <button id="logoutBtn" class="secondary hidden">Cerrar sesión</button>
+  </div>
+</header>
+
+<main>
+<section id="loginView" class="login-wrap">
+  <div class="login-card">
+    <h1>Studio Login</h1>
+    <p class="note">Acceso privado para AB Photography.</p>
+    <form id="loginForm">
+      <label>Email
+        <input id="loginEmail" type="email" required autocomplete="username">
+      </label>
+      <br><br>
+      <label>Contraseña
+        <input id="loginPassword" type="password" required autocomplete="current-password">
+      </label>
+      <div class="actions"><button type="submit">Entrar</button></div>
+      <div id="loginMsg" class="msg"></div>
+    </form>
+  </div>
+</section>
+
+<section id="portalView" class="portal hidden">
+  <aside>
+    <h2>Panel</h2>
+    <nav>
+      <a class="active" href="admin.html">Nuevo contrato</a>
+      <a href="portfolio-manager.html">Portfolio Manager</a>
+      <a href="#" id="contractsLink">Contratos guardados</a>
+      <a href="#">Firmados</a>
+      <a href="#">Clientes</a>
+    </nav>
+    <p class="note">Sesión conectada con Supabase Auth. Los contratos creados desde aquí se guardan en tu base de datos.</p>
+  </aside>
+
+  <section>
+    <div class="status">
+      <div class="stat"><b>Draft</b><br><small>Creado</small></div>
+      <div class="stat"><b>Sent</b><br><small>Enviado</small></div>
+      <div class="stat"><b>Viewed</b><br><small>Visto</small></div>
+      <div class="stat"><b>Signed</b><br><small>Firmado</small></div>
+    </div>
+
+    <div class="card">
+      <h1>Crear Wedding Contract</h1>
+      <p>Llena únicamente la información variable. Las cláusulas permanecen como plantilla.</p>
+
+      <form id="contractForm" class="grid">
+        <label>Cliente 1<input id="c1" required placeholder="Nombre completo"></label>
+        <label>Cliente 2<input id="c2" placeholder="Nombre completo"></label>
+        <label>Teléfono<input id="phone" placeholder="956 000 0000"></label>
+        <label>Email<input id="email" type="email" placeholder="cliente@email.com"></label>
+        <label>Fecha del evento<input id="date" type="date"></label>
+        <label>Hora de cobertura<input id="hours" placeholder="7:00 PM - 11:00 PM"></label>
+        <label>Recepción / Venue<input id="venue" placeholder="Nombre del venue"></label>
+        <label>Dirección<input id="address" placeholder="Dirección completa"></label>
+        <label>Paquete
+          <select id="package">
+            <option>Solo nosotros</option>
+            <option selected>Nuestra historia</option>
+            <option>Para siempre</option>
+          </select>
+        </label>
+        <label>Total<input id="total" type="number" step="0.01" value="500"></label>
+        <label>Depósito<input id="deposit" type="number" step="0.01" value="150"></label>
+        <label>Saldo pendiente<input id="balance" type="number" step="0.01" value="350"></label>
+
+        <div class="full actions">
+          <button type="submit">Guardar y generar contrato</button>
+          <a class="btn secondary" href="index.html">Volver al sitio</a>
+        </div>
+        <div id="contractMsg" class="msg full"></div>
+      </form>
+    </div>
+
+    <div id="contractsPanel" class="card hidden" style="margin-top:20px">
+      <h2>Contratos recientes</h2>
+      <div id="contractsList" class="note">Cargando...</div>
+    </div>
+  </section>
+</section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL = "https://kuvdvhmitxucqfqendfu.supabase.co";
+const SUPABASE_KEY = "sb_publishable_yt2XQ6hNfAWtcUjyXovvEA_D1Cab-_o";
+const sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const loginView = document.getElementById('loginView');
+const portalView = document.getElementById('portalView');
+const logoutBtn = document.getElementById('logoutBtn');
+
+async function applySession() {
+  const { data: { session } } = await sbClient.auth.getSession();
+  const loggedIn = !!session;
+  loginView.classList.toggle('hidden', loggedIn);
+  portalView.classList.toggle('hidden', !loggedIn);
+  logoutBtn.classList.toggle('hidden', !loggedIn);
+}
+
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const msg = document.getElementById('loginMsg');
+  msg.className = 'msg'; msg.textContent = '';
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  msg.className='msg ok';
+  msg.textContent='Verificando acceso...';
+
+  try {
+    const { data, error } = await sbClient.auth.signInWithPassword({ email, password });
+
+    if (error) {
+      msg.className='msg err';
+      msg.textContent='No se pudo iniciar sesión: ' + error.message;
+      return;
+    }
+
+    if (!data?.session) {
+      msg.className='msg err';
+      msg.textContent='Supabase no devolvió una sesión. Revisa que el usuario esté confirmado.';
+      return;
+    }
+
+    // Open the portal immediately from the successful login response.
+    loginView.classList.add('hidden');
+    portalView.classList.remove('hidden');
+    logoutBtn.classList.remove('hidden');
+    msg.className='msg';
+    msg.textContent='';
+  } catch (err) {
+    msg.className='msg err';
+    msg.textContent='Error de conexión: ' + (err?.message || String(err));
+  }
+});
+
+logoutBtn.addEventListener('click', async () => {
+  await sbClient.auth.signOut();
+  portalView.classList.add('hidden');
+  loginView.classList.remove('hidden');
+  logoutBtn.classList.add('hidden');
+});
+
+// Initial session check only. Avoid re-entering getSession from onAuthStateChange.
+applySession().catch(err => {
+  const msg = document.getElementById('loginMsg');
+  msg.className='msg err';
+  msg.textContent='Error conectando con Supabase: ' + err.message;
+});
+
+document.getElementById('contractForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const msg = document.getElementById('contractMsg');
+  msg.className='msg'; msg.textContent='';
+
+  const v=id=>document.getElementById(id).value.trim();
+  const payload = {
+    client_1:v('c1'),
+    client_2:v('c2') || null,
+    email:v('email') || null,
+    phone:v('phone') || null
+  };
+
+  const { data: client, error: clientError } = await sbClient.from('clients')
+    .insert(payload)
+    .select()
+    .single();
+
+  if (clientError) {
+    msg.className='msg err'; msg.textContent='Error guardando cliente: ' + clientError.message;
+    return;
+  }
+
+  const contractPayload = {
+    client_id: client.id,
+    event_type:'wedding',
+    event_date:v('date') || null,
+    venue:v('venue') || null,
+    address:v('address') || null,
+    coverage_hours:v('hours') || null,
+    package_name:v('package') || null,
+    total:Number(v('total') || 0),
+    deposit:Number(v('deposit') || 0),
+    balance:Number(v('balance') || 0),
+    status:'draft'
+  };
+
+  const { data: contract, error: contractError } = await sbClient.from('contracts')
+    .insert(contractPayload)
+    .select()
+    .single();
+
+  if (contractError) {
+    msg.className='msg err'; msg.textContent='Cliente creado, pero hubo error guardando contrato: ' + contractError.message;
+    return;
+  }
+
+  const previewData = {
+    c1: payload.client_1, c2: payload.client_2 || '', phone: payload.phone || '',
+    email: payload.email || '', date: contractPayload.event_date || '',
+    hours: contractPayload.coverage_hours || '', venue: contractPayload.venue || '',
+    address: contractPayload.address || '', package: contractPayload.package_name || '',
+    total: contractPayload.total, deposit: contractPayload.deposit, balance: contractPayload.balance,
+    contract_id: contract.id, public_token: contract.public_token
+  };
+  localStorage.setItem('ab_contract_demo', JSON.stringify(previewData));
+  msg.className='msg ok'; msg.textContent='Contrato guardado correctamente en Supabase. Abriendo vista previa...';
+  setTimeout(()=>location.href='contract.html',700);
+});
+
+document.getElementById('contractsLink').addEventListener('click', async (e) => {
+  e.preventDefault();
+  const panel=document.getElementById('contractsPanel');
+  panel.classList.toggle('hidden');
+  if(panel.classList.contains('hidden')) return;
+  const list=document.getElementById('contractsList');
+  list.textContent='Cargando...';
+  const {data,error}=await sbClient.from('contracts')
+    .select('id,event_type,event_date,venue,status,total,created_at,clients(client_1,client_2,email)')
+    .order('created_at',{ascending:false})
+    .limit(20);
+  if(error) { list.textContent='Error: '+error.message; return; }
+  if(!data.length) { list.textContent='No hay contratos todavía.'; return; }
+  list.innerHTML=data.map(c=>`<div style="padding:12px 0;border-bottom:1px solid #eee">
+    <b>${c.clients?.client_1 || 'Cliente'}</b> · ${c.total} · ${c.status}<br>
+    <span>${c.event_date || 'Sin fecha'} · ${c.venue || 'Sin venue'}</span>
+  </div>`).join('');
+});
+</script>
+</body>
+</html>

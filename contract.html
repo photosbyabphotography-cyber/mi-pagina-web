@@ -1,0 +1,31 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AB Photography — Contract Demo</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#eee8e3;color:#2b2928;font-family:Georgia,serif}.toolbar{position:sticky;top:0;background:#211f1e;color:#fff;padding:12px 5vw;display:flex;justify-content:space-between;gap:10px;z-index:2}.toolbar a,.toolbar button{color:#fff;background:transparent;border:1px solid #777;padding:9px 12px;text-decoration:none}
+.paper{max-width:900px;margin:28px auto;background:#fff;box-shadow:0 10px 35px #0002}.hero{background:#f5eee9;text-align:center;padding:55px 20px}.hero small{letter-spacing:.35em}.hero h1{font-size:58px;font-weight:400;letter-spacing:.12em;margin:12px 0}.section{padding:42px 8%}.section h2{text-align:center;font-size:14px;letter-spacing:.4em;font-weight:400;margin-bottom:35px}.fields{display:grid;grid-template-columns:1fr 1fr;gap:22px 40px}.field{border-bottom:1px dotted #777;padding:8px 4px}.clauses{line-height:1.65}.sign{display:grid;grid-template-columns:1fr 1fr;gap:30px;margin-top:45px}.sigbox{border:1px solid #ddd;padding:14px}.sigbox canvas{width:100%;height:150px;border-bottom:1px solid #555;touch-action:none}.accept{margin:28px 0;padding:18px;background:#f8f4f1}.footer{text-align:center;background:#f5eee9;padding:34px;letter-spacing:.3em}.signed{display:none;padding:12px;background:#e9f4ea;border:1px solid #b8d2ba;margin-top:15px}
+@media(max-width:700px){.fields,.sign{grid-template-columns:1fr}.hero h1{font-size:38px}}
+@media print{.toolbar{display:none}.paper{box-shadow:none;margin:0}.sigbox button{display:none}}
+</style></head><body><div class="toolbar"><a href="admin.html">← Editar datos</a><div>Vista del cliente · DEMO</div><button onclick="window.print()">Guardar / Imprimir PDF</button></div>
+<article class="paper"><div class="hero"><small>AB PHOTOGRAPHY</small><h1>WEDDING</h1><em>Contract</em></div>
+<section class="section"><h2>INFORMACIÓN DEL CLIENTE</h2><div class="fields">
+<div class="field">Cliente 1: <b id="c1"></b></div><div class="field">Cliente 2: <b id="c2"></b></div><div class="field">Phone: <b id="phone"></b></div><div class="field">Email: <b id="email"></b></div></div>
+<h2 style="margin-top:55px">INFORMACIÓN DEL EVENTO</h2><div class="fields"><div class="field">Recepción: <b id="venue"></b></div><div class="field">Hora de cobertura: <b id="hours"></b></div><div class="field">Dirección: <b id="address"></b></div><div class="field">Fecha del evento: <b id="date"></b></div></div>
+<h2 style="margin-top:55px">SERVICIO FOTOGRÁFICO</h2><div class="fields"><div class="field">Paquete: <b id="package"></b></div><div class="field">Total: $<b id="total"></b> USD</div><div class="field">Depósito: $<b id="deposit"></b> USD</div><div class="field">Saldo pendiente: $<b id="balance"></b> USD</div></div></section>
+<section class="section"><h2>CLÁUSULAS</h2><ol class="clauses">
+<li>Se trabajará por número de horas continuas según lo pactado entre las partes.</li>
+<li>Se entregará una galería electrónica con un mínimo de 200 fotografías (dependiendo del contenido generado en el evento). El tiempo estimado de entrega será de 6 a 8 semanas posteriores al evento.</li>
+<li>No se fotografiará durante la hora de la cena por comodidad de los novios e invitados.</li>
+<li>No se fotografiará en presencia de láser durante el evento, debido a que este puede dañar el equipo fotográfico. En caso de que se vayan a utilizar, los clientes se comprometen a informar con anticipación.</li>
+<li>Para separar la fecha se requiere un anticipo del 30% del valor total. El resto deberá liquidarse con al menos 15 días de anticipación al evento.</li>
+<li>En caso de cancelación por parte de los clientes, no habrá reembolsos del anticipo ni de los pagos realizados.</li></ol>
+<div class="accept"><label><input id="agree" type="checkbox"> He leído y entendido los términos anteriores. Por la presente acepto los términos de este acuerdo.</label></div>
+<div class="sign"><div class="sigbox"><b>Firma del cliente</b><canvas id="sig"></canvas><button onclick="clearSig()">Borrar firma</button></div><div class="sigbox"><b>AB Photography</b><p>Firma del fotógrafo</p><div style="font-size:38px;font-style:italic;margin:35px 0">AB Photography</div></div></div>
+<button style="margin-top:25px;padding:14px 20px;background:#211f1e;color:#fff;border:0" onclick="signContract()">Firmar y aceptar contrato</button><div id="savedMeta" style="font-size:11px;opacity:.55;margin-top:14px"></div><div id="signed" class="signed">✓ DEMO: Contrato marcado como firmado. En la versión final se guardará el documento, fecha/hora y evidencia de firma de forma segura.</div></section>
+<div class="footer">AB PHOTOGRAPHY<br><small>LAREDO, TEXAS</small></div></article>
+<script>
+let d=JSON.parse(localStorage.getItem('ab_contract_demo')||'{}'); if(d.contract_id){document.addEventListener('DOMContentLoaded',()=>{const m=document.getElementById('savedMeta'); if(m)m.textContent='Supabase Contract ID: '+d.contract_id;});}['c1','c2','phone','email','date','hours','venue','address','package','total','deposit','balance'].forEach(k=>document.getElementById(k).textContent=d[k]||'—');
+const c=document.getElementById('sig'),x=c.getContext('2d');function size(){c.width=c.offsetWidth*devicePixelRatio;c.height=150*devicePixelRatio;x.scale(devicePixelRatio,devicePixelRatio);x.lineWidth=2;x.lineCap='round'}size();let draw=false;
+function p(e){let r=c.getBoundingClientRect(),q=e.touches?e.touches[0]:e;return [q.clientX-r.left,q.clientY-r.top]}
+function st(e){draw=true;let q=p(e);x.beginPath();x.moveTo(...q);e.preventDefault()}function mv(e){if(!draw)return;let q=p(e);x.lineTo(...q);x.stroke();e.preventDefault()}function en(){draw=false}
+['mousedown','touchstart'].forEach(v=>c.addEventListener(v,st,{passive:false}));['mousemove','touchmove'].forEach(v=>c.addEventListener(v,mv,{passive:false}));['mouseup','mouseleave','touchend'].forEach(v=>c.addEventListener(v,en));
+function clearSig(){x.clearRect(0,0,c.width,c.height)}function signContract(){if(!document.getElementById('agree').checked){alert('Marca la casilla de aceptación primero.');return}document.getElementById('signed').style.display='block';}
+</script></body></html>
