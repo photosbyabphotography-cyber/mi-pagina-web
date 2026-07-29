@@ -44,7 +44,7 @@
       <img src="assets/logo.jpg" alt="AB Photography logo">
     </a>
 
-    <button class="menu-button" aria-label="Abrir menú">
+    <button class="menu-button" aria-label="Abrir menú" aria-expanded="false" aria-controls="primaryNav">
       <span></span>
       <span></span>
     </button>
@@ -56,7 +56,7 @@
       <button type="button" data-set-lang="es">ES</button>
     </div>
 
-    <nav class="nav">
+    <nav class="nav" id="primaryNav">
       <a href="#portfolio" id="navPortfolio">Portafolio</a>
       <a href="#servicios" id="navServices">Servicios</a>
       <a href="#experiencia" id="navExperience">Experiencia</a>
@@ -346,11 +346,11 @@
     WhatsApp
   </a>
 
-  <div class="lightbox" aria-hidden="true">
-    <button class="lightbox-close" aria-label="Cerrar galería">×</button>
-    <button class="lightbox-arrow lightbox-prev" aria-label="Fotografía anterior">‹</button>
+  <div class="lightbox" role="dialog" aria-modal="true" aria-label="Galería de fotografías" aria-hidden="true">
+    <button type="button" class="lightbox-close" aria-label="Cerrar galería">×</button>
+    <button type="button" class="lightbox-arrow lightbox-prev" aria-label="Fotografía anterior">‹</button>
     <img src="" alt="Fotografía ampliada">
-    <button class="lightbox-arrow lightbox-next" aria-label="Fotografía siguiente">›</button>
+    <button type="button" class="lightbox-arrow lightbox-next" aria-label="Fotografía siguiente">›</button>
     <span class="lightbox-count" aria-live="polite"></span>
   </div>
 

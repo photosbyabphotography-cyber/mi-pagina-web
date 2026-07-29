@@ -1,125 +1,126 @@
-const header = document.querySelector("#header");
-const menuButton = document.querySelector(".menu-button");
-const nav = document.querySelector(".nav");
-const year = document.querySelector("#year");
+(() => {
+  "use strict";
 
-year.textContent = new Date().getFullYear();
+  const header = document.querySelector("#header");
+  const menuButton = document.querySelector(".menu-button");
+  const nav = document.querySelector(".nav");
+  const year = document.querySelector("#year");
 
-window.addEventListener("scroll", () => {
-  header.classList.toggle("scrolled", window.scrollY > 40);
-});
+  if (year) year.textContent = new Date().getFullYear();
 
-menuButton.addEventListener("click", () => {
-  nav.classList.toggle("open");
-});
+  const updateHeader = () => header?.classList.toggle("scrolled", window.scrollY > 40);
+  updateHeader();
+  window.addEventListener("scroll", updateHeader, { passive: true });
 
-document.querySelectorAll(".nav a").forEach((link) => {
-  link.addEventListener("click", () => nav.classList.remove("open"));
-});
-
-const observer = new IntersectionObserver((entries) => {
-  entries.forEach((entry) => {
-    if (entry.isIntersecting) entry.target.classList.add("visible");
+  menuButton?.addEventListener("click", () => {
+    const isOpen = nav?.classList.toggle("open") ?? false;
+    menuButton.setAttribute("aria-expanded", String(isOpen));
   });
-}, { threshold: 0.12 });
 
-document.querySelectorAll(".reveal").forEach((el) => observer.observe(el));
+  document.querySelectorAll(".nav a").forEach((link) => {
+    link.addEventListener("click", () => {
+      nav?.classList.remove("open");
+      menuButton?.setAttribute("aria-expanded", "false");
+    });
+  });
 
-const lightbox = document.querySelector(".lightbox");
-const lightboxImg = document.querySelector(".lightbox img");
-const lightboxClose = document.querySelector(".lightbox-close");
-const lightboxPrev = document.querySelector(".lightbox-prev");
-const lightboxNext = document.querySelector(".lightbox-next");
-const lightboxCount = document.querySelector(".lightbox-count");
-const galleryItems = Array.from(document.querySelectorAll(".portfolio-lightbox-item, .gallery-item"));
-
-// V10: always start with the gallery viewer closed.
-if (lightbox) {
-  lightbox.classList.remove("open", "controls-hidden");
-  lightbox.setAttribute("aria-hidden", "true");
-}
-if (lightboxImg) lightboxImg.removeAttribute("src");
-document.body.classList.remove("lightbox-open");
-let currentGalleryIndex = 0;
-let touchStartX = 0;
-let lightboxScrollY = 0;
-function showLightboxControls() {
-  lightbox?.classList.remove("controls-hidden");
-}
-
-function showGalleryImage(index, immediate = false) {
-  if (!galleryItems.length || !lightboxImg) return;
-  currentGalleryIndex = (index + galleryItems.length) % galleryItems.length;
-  const item = galleryItems[currentGalleryIndex];
-  const updateImage = () => {
-    lightboxImg.src = item.dataset.full || item.querySelector("img")?.src || "";
-    lightboxImg.alt = item.querySelector("img")?.alt || "Fotografía ampliada";
-    if (lightboxCount) lightboxCount.textContent = `${currentGalleryIndex + 1} / ${galleryItems.length}`;
-    lightboxImg.style.opacity = "1";
-  };
-  if (immediate) updateImage();
-  else {
-    lightboxImg.style.opacity = "0";
-    setTimeout(updateImage, 120);
+  const revealElements = document.querySelectorAll(".reveal");
+  if ("IntersectionObserver" in window) {
+    const observer = new IntersectionObserver((entries, obs) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        entry.target.classList.add("visible");
+        obs.unobserve(entry.target);
+      });
+    }, { threshold: 0.1 });
+    revealElements.forEach((element) => observer.observe(element));
+  } else {
+    revealElements.forEach((element) => element.classList.add("visible"));
   }
-  showLightboxControls();
-}
 
-function openLightbox(index) {
-  lightboxScrollY = window.scrollY;
-  currentGalleryIndex = index;
-  showGalleryImage(index, true);
-  lightbox?.classList.add("open");
-  lightbox?.setAttribute("aria-hidden", "false");
-  document.body.classList.add("lightbox-open");
-}
+  const lightbox = document.querySelector(".lightbox");
+  const lightboxImg = lightbox?.querySelector("img");
+  const closeButton = lightbox?.querySelector(".lightbox-close");
+  const prevButton = lightbox?.querySelector(".lightbox-prev");
+  const nextButton = lightbox?.querySelector(".lightbox-next");
+  const counter = lightbox?.querySelector(".lightbox-count");
+  const galleryItems = [...document.querySelectorAll(".portfolio-lightbox-item, .gallery-item")];
 
-function closeLightbox() {
-  lightbox?.classList.remove("open", "controls-hidden");
-  lightbox?.setAttribute("aria-hidden", "true");
-  document.body.classList.remove("lightbox-open");
-  if (lightboxImg) lightboxImg.src = "";
-  window.scrollTo({ top: lightboxScrollY, behavior: "instant" });
-  galleryItems[currentGalleryIndex]?.focus({ preventScroll: true });
-}
+  let currentIndex = 0;
+  let savedScrollY = 0;
+  let touchStartX = 0;
+  let lastTrigger = null;
 
-galleryItems.forEach((item, index) => {
-  item.addEventListener("click", () => openLightbox(index));
-});
+  const setViewerState = (open) => {
+    if (!lightbox) return;
+    lightbox.classList.toggle("open", open);
+    lightbox.setAttribute("aria-hidden", String(!open));
+    document.body.classList.toggle("lightbox-open", open);
+  };
 
-lightboxClose?.addEventListener("click", (event) => {
-  event.stopPropagation();
-  closeLightbox();
-});
-lightboxPrev?.addEventListener("click", (event) => {
-  event.stopPropagation();
-  showGalleryImage(currentGalleryIndex - 1);
-});
-lightboxNext?.addEventListener("click", (event) => {
-  event.stopPropagation();
-  showGalleryImage(currentGalleryIndex + 1);
-});
+  const renderImage = (index, immediate = false) => {
+    if (!lightboxImg || !galleryItems.length) return;
+    currentIndex = (index + galleryItems.length) % galleryItems.length;
+    const item = galleryItems[currentIndex];
+    const source = item.dataset.full || item.querySelector("img")?.currentSrc || item.querySelector("img")?.src;
+    if (!source) return;
 
-lightbox?.addEventListener("click", (event) => {
-  if (event.target === lightbox) closeLightbox();
-  else if (event.target === lightboxImg) showLightboxControls();
-});
-lightbox?.addEventListener("touchstart", event => {
-  touchStartX = event.changedTouches[0].clientX;
-  showLightboxControls();
-}, { passive: true });
-lightbox?.addEventListener("touchend", event => {
-  const dx = event.changedTouches[0].clientX - touchStartX;
-  if (Math.abs(dx) > 45) showGalleryImage(currentGalleryIndex + (dx < 0 ? 1 : -1));
-}, { passive: true });
+    const update = () => {
+      lightboxImg.src = source;
+      lightboxImg.alt = item.querySelector("img")?.alt || "Fotografía ampliada";
+      if (counter) counter.textContent = `${currentIndex + 1} / ${galleryItems.length}`;
+      lightboxImg.style.opacity = "1";
+    };
 
-document.addEventListener("keydown", (event) => {
-  if (!lightbox?.classList.contains("open")) return;
-  if (event.key === "Escape") closeLightbox();
-  if (event.key === "ArrowLeft") showGalleryImage(currentGalleryIndex - 1);
-  if (event.key === "ArrowRight") showGalleryImage(currentGalleryIndex + 1);
-});
+    if (immediate) update();
+    else {
+      lightboxImg.style.opacity = "0";
+      window.setTimeout(update, 130);
+    }
+  };
 
+  const openLightbox = (index, trigger) => {
+    savedScrollY = window.scrollY;
+    lastTrigger = trigger;
+    renderImage(index, true);
+    setViewerState(true);
+    closeButton?.focus({ preventScroll: true });
+  };
+
+  const closeLightbox = () => {
+    if (!lightbox?.classList.contains("open")) return;
+    setViewerState(false);
+    if (lightboxImg) {
+      lightboxImg.removeAttribute("src");
+      lightboxImg.style.opacity = "1";
+    }
+    window.scrollTo(0, savedScrollY);
+    lastTrigger?.focus({ preventScroll: true });
+  };
+
+  setViewerState(false);
+  lightboxImg?.removeAttribute("src");
+
+  galleryItems.forEach((item, index) => {
+    item.addEventListener("click", () => openLightbox(index, item));
+  });
+  closeButton?.addEventListener("click", closeLightbox);
+  prevButton?.addEventListener("click", (event) => { event.stopPropagation(); renderImage(currentIndex - 1); });
+  nextButton?.addEventListener("click", (event) => { event.stopPropagation(); renderImage(currentIndex + 1); });
+  lightbox?.addEventListener("click", (event) => { if (event.target === lightbox) closeLightbox(); });
+  lightbox?.addEventListener("touchstart", (event) => { touchStartX = event.changedTouches[0].clientX; }, { passive: true });
+  lightbox?.addEventListener("touchend", (event) => {
+    const delta = event.changedTouches[0].clientX - touchStartX;
+    if (Math.abs(delta) > 45) renderImage(currentIndex + (delta < 0 ? 1 : -1));
+  }, { passive: true });
+
+  document.addEventListener("keydown", (event) => {
+    if (!lightbox?.classList.contains("open")) return;
+    if (event.key === "Escape") closeLightbox();
+    if (event.key === "ArrowLeft") renderImage(currentIndex - 1);
+    if (event.key === "ArrowRight") renderImage(currentIndex + 1);
+  });
+})();
 
 /* --- Bilingual experience --- */
 (() => {
