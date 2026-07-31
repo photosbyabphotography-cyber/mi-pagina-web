@@ -350,7 +350,7 @@
           `Detalles: ${message}`
         ];
       }
-      const url = "https://wa.me/19568158084?text=" + encodeURIComponent(lines.join("\n"));
+      const url = "https://wa.me/19563079162?text=" + encodeURIComponent(lines.join("\n"));
       window.open(url, "_blank", "noopener");
     });
   }
