@@ -258,3 +258,40 @@ h1,h2,h3,p { margin-top: 0; }
   .lightbox.open { grid-template-columns:38px minmax(0,1fr) 38px; padding:52px 0 34px; }
   .lightbox-arrow { width:36px; height:58px; }
 }
+
+
+/* =========================================================
+   Public gallery: strict 2-column row order on mobile
+   Visual order:
+   1 2
+   3 4
+   5 6
+   ========================================================= */
+@media (max-width: 820px) {
+  .wedding-gallery {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-auto-flow: row !important;
+    gap: 3px !important;
+    column-count: initial !important;
+    columns: initial !important;
+    align-items: stretch !important;
+  }
+
+  .wedding-gallery .gallery-item {
+    display: block !important;
+    width: 100% !important;
+    margin: 0 !important;
+    break-inside: auto !important;
+    aspect-ratio: 4 / 5;
+    overflow: hidden;
+    background: #eee8e2;
+  }
+
+  .wedding-gallery .gallery-item img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    display: block !important;
+  }
+}

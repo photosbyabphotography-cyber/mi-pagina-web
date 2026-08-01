@@ -36,3 +36,14 @@ Después podrás ocultarlas, ordenarlas o elegir portada desde el portal.
 - El orden visual se lee de izquierda a derecha y luego continúa en la siguiente fila.
 - Cada miniatura muestra un número para confirmar su posición.
 - Al arrastrar una foto, el orden se guarda automáticamente.
+
+
+## Galería pública móvil en filas
+La galería pública ahora usa dos columnas con orden estricto de izquierda a derecha:
+
+1 2
+3 4
+5 6
+
+Para evitar huecos, las miniaturas usan una proporción uniforme 4:5 y pueden recortar ligeramente los bordes.
+Al abrir una fotografía en el lightbox se muestra la imagen completa.
