@@ -29,3 +29,10 @@ Después podrás ocultarlas, ordenarlas o elegir portada desde el portal.
 - El nuevo orden se guarda automáticamente.
 - También puedes arrastrar fotografías desde una carpeta de Windows hacia el área de carga.
 - En celular, mantén presionado el icono ⋮⋮ y arrastra la foto.
+
+
+## Vista de dos columnas
+- El administrador muestra siempre 2 columnas.
+- El orden visual se lee de izquierda a derecha y luego continúa en la siguiente fila.
+- Cada miniatura muestra un número para confirmar su posición.
+- Al arrastrar una foto, el orden se guarda automáticamente.

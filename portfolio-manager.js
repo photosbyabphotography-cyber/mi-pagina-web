@@ -74,14 +74,14 @@
 
     photos = data || [];
     render();
-    setStatus(`${photos.length} fotografía(s) en ${labels[categoryEl.value]}. Arrastra para cambiar el orden.`);
+    setStatus(`${photos.length} fotografía(s) en ${labels[categoryEl.value]}. Orden: izquierda a derecha y después continúa en la siguiente fila. Arrastra para cambiarlo.`);
   }
 
   function render() {
     grid.innerHTML = '';
     empty.classList.toggle('hidden', photos.length > 0);
 
-    photos.forEach((photo) => {
+    photos.forEach((photo, index) => {
       const card = document.createElement('article');
       card.className =
         'card' +
@@ -90,6 +90,7 @@
 
       card.draggable = true;
       card.dataset.id = photo.id;
+      card.dataset.position = String(index + 1);
 
       card.innerHTML = `
         <div class="drag-handle" title="Arrastrar para ordenar" aria-label="Arrastrar para ordenar">⋮⋮</div>
