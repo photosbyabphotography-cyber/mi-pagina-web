@@ -44,7 +44,7 @@
   const prevButton = lightbox?.querySelector(".lightbox-prev");
   const nextButton = lightbox?.querySelector(".lightbox-next");
   const counter = lightbox?.querySelector(".lightbox-count");
-  const galleryItems = [...document.querySelectorAll(".portfolio-lightbox-item, .gallery-item")];
+  let galleryItems = [...document.querySelectorAll(".portfolio-lightbox-item, .gallery-item")];
 
   let currentIndex = 0;
   let savedScrollY = 0;
@@ -104,6 +104,11 @@
   galleryItems.forEach((item, index) => {
     item.addEventListener("click", () => openLightbox(index, item));
   });
+  window.addEventListener("ab-gallery-rebuilt", () => {
+    galleryItems = [...document.querySelectorAll(".portfolio-lightbox-item, .gallery-item")];
+    galleryItems.forEach((item, index) => item.addEventListener("click", () => openLightbox(index)));
+  });
+
   closeButton?.addEventListener("click", closeLightbox);
   prevButton?.addEventListener("click", (event) => { event.stopPropagation(); renderImage(currentIndex - 1); });
   nextButton?.addEventListener("click", (event) => { event.stopPropagation(); renderImage(currentIndex + 1); });

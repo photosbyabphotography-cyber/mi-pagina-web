@@ -1,117 +1,67 @@
 <!doctype html>
 <html lang="es">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>AB Studio Portal — Portfolio Manager Demo</title>
-<style>
-:root{--ink:#24211f;--paper:#f7f2ed;--line:#d9cec5;--white:#fff;--muted:#7a706a}
-*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:var(--paper);color:var(--ink)}
-header{padding:20px 4vw;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;background:#fff;position:sticky;top:0;z-index:10}
-.brand{letter-spacing:.28em;font-family:Georgia,serif}.badge{font-size:11px;padding:7px 10px;border:1px solid #a88f80;border-radius:99px}
-main{max-width:1400px;margin:28px auto;padding:0 20px}
-.topbar{display:flex;justify-content:space-between;gap:16px;align-items:flex-end;flex-wrap:wrap;margin-bottom:22px}
-h1{font-family:Georgia,serif;font-weight:400;margin:0 0 8px}.note{font-size:12px;color:var(--muted);max-width:780px;line-height:1.55}
-.actions{display:flex;gap:10px;flex-wrap:wrap}
-button,a.btn{border:0;padding:12px 16px;background:#24211f;color:#fff;text-decoration:none;cursor:pointer}
-.secondary{background:#e9e3df!important;color:#222!important}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:14px}
-.card{background:#fff;border:1px solid var(--line);border-radius:10px;overflow:hidden;cursor:grab;position:relative}
-.card.dragging{opacity:.45}.card.hidden-card{opacity:.35}
-.thumb{aspect-ratio:4/5;background:#ddd;overflow:hidden}.thumb img{width:100%;height:100%;object-fit:cover;display:block}
-.meta{padding:10px;font-size:11px}.row{display:flex;justify-content:space-between;gap:8px;align-items:center}
-.pill{font-size:10px;padding:4px 7px;border:1px solid var(--line);border-radius:99px}
-.controls{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}
-.controls button{padding:8px;font-size:10px;background:#eee;color:#222;border:1px solid #ddd}
-.controls button.hero{background:#24211f;color:#fff}
-.hero-badge{position:absolute;top:8px;left:8px;background:#fff;padding:5px 7px;font-size:10px;font-weight:700;border-radius:99px;display:none}
-.card.is-hero .hero-badge{display:block}
-.preview{margin-top:28px;background:#fff;border:1px solid var(--line);padding:18px}
-.preview h2{font-family:Georgia,serif;font-weight:400}
-.preview-grid{columns:4 180px;column-gap:10px}.preview-grid img{width:100%;margin-bottom:10px;display:block;break-inside:avoid}
-.toast{position:fixed;bottom:22px;right:22px;background:#24211f;color:#fff;padding:12px 16px;border-radius:8px;display:none}
-@media(max-width:800px){.preview-grid{columns:2 140px}}
-</style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AB Studio Portal — Portfolio Manager</title>
+<link rel="stylesheet" href="portfolio-manager.css">
 </head>
 <body>
-<header><div class="brand">AB PHOTOGRAPHY</div><span class="badge">PORTFOLIO MANAGER · DEMO</span></header>
+<header>
+  <div class="brand">AB PHOTOGRAPHY</div>
+  <span class="badge">PORTFOLIO MANAGER</span>
+</header>
+
 <main>
-<div class="topbar">
-<div><h1>Portfolio Manager</h1>
-<p class="note">Arrastra las fotografías para cambiar su orden. Puedes marcar una como Hero, ocultarla sin borrarla y revisar una vista previa. En esta DEMO los cambios se guardan solo en este navegador mediante localStorage; todavía no publican cambios reales al sitio.</p></div>
-<div class="actions">
-<a class="btn secondary" href="admin.html">← Panel</a>
-<a class="btn secondary" href="index.html">Ver sitio</a>
-<button id="resetBtn" class="secondary">Restablecer</button>
-<button id="saveBtn">Guardar orden DEMO</button>
-</div>
-</div>
+  <section id="checkingView" class="login-state">
+    <div class="panel"><h2>Verificando acceso…</h2><p class="note">Conectando con Supabase.</p></div>
+  </section>
 
-<div id="grid" class="grid"></div>
+  <section id="managerView" class="hidden">
+    <div class="topbar">
+      <div>
+        <h1>Portfolio Manager</h1>
+        <p class="note">Sube fotografías, elige la portada de cada categoría y oculta imágenes sin eliminarlas. Los cambios se reflejan en la página pública.</p>
+      </div>
+      <div class="actions">
+        <a class="btn secondary" href="admin.html">← Panel</a>
+        <a class="btn secondary" href="index.html#portfolio">Ver sitio</a>
+        <button id="logoutBtn" class="secondary">Cerrar sesión</button>
+      </div>
+    </div>
 
-<section class="preview">
-<h2>Vista previa del orden visible</h2>
-<div id="previewGrid" class="preview-grid"></div>
-</section>
+    <section class="panel">
+      <div class="toolbar">
+        <label>Categoría
+          <select id="category">
+            <option value="weddings">Bodas</option>
+            <option value="quinceaneras">Quinceañeras</option>
+            <option value="sessions">Sesiones</option>
+            <option value="events">Eventos</option>
+          </select>
+        </label>
+        <div class="upload-row">
+          <label>Seleccionar fotos
+            <input id="files" type="file" accept="image/jpeg,image/png,image/webp" multiple>
+          </label>
+          <button id="uploadBtn" type="button">Subir fotografías</button>
+        </div>
+      </div>
+      <div class="progress" aria-hidden="true"><span id="progressBar"></span></div>
+      <div class="status" id="status"></div>
+      <div class="actions" style="margin-top:12px">
+        <button id="importCurrentBtn" type="button" class="secondary">Importar las 28 fotos actuales de Bodas</button>
+      </div>
+      <p class="note">Las imágenes se optimizan en el navegador a WebP antes de subirlas. Para mejores resultados usa JPG, PNG o WebP.</p>
+    </section>
+
+    <div id="grid" class="grid"></div>
+    <div id="empty" class="empty hidden">Todavía no hay fotografías en esta categoría.</div>
+  </section>
 </main>
-<div id="toast" class="toast">Cambios guardados en esta DEMO.</div>
-
-<script>
-const defaults = ["photo-01.jpg", "photo-02.jpg", "photo-03.jpg", "photo-04.jpg", "photo-05.jpg", "photo-06.jpg", "photo-07.jpg", "photo-08.jpg", "photo-09.jpg", "photo-10.jpg", "photo-11.jpg", "photo-12.jpg", "photo-13.jpg", "photo-14.jpg", "photo-15.jpg", "photo-16.jpg", "photo-17.jpg", "photo-18.jpg", "photo-19.jpg", "photo-20.jpg", "photo-21.jpg", "photo-22.jpg", "photo-23.jpg", "photo-24.jpg", "photo-25.jpg", "photo-26.jpg", "photo-27.jpg", "photo-28.jpg", "photo-29.jpg"];
-let state = JSON.parse(localStorage.getItem('ab_portfolio_manager_demo') || 'null') || {
-  order:[...defaults], hidden:[], hero:'photo-01.jpg'
-};
-const grid=document.getElementById('grid'), preview=document.getElementById('previewGrid');
-let dragName=null;
-
-function save(){
-  localStorage.setItem('ab_portfolio_manager_demo', JSON.stringify(state));
-  const t=document.getElementById('toast'); t.style.display='block'; setTimeout(()=>t.style.display='none',1600);
-}
-function render(){
-  grid.innerHTML='';
-  state.order.forEach((name,i)=>{
-    const card=document.createElement('div');
-    card.className='card'+(state.hidden.includes(name)?' hidden-card':'')+(state.hero===name?' is-hero':'');
-    card.draggable=true; card.dataset.name=name;
-    card.innerHTML=`<div class="hero-badge">★ HERO</div>
-      <div class="thumb"><img src="assets/photos/${name}" alt=""></div>
-      <div class="meta"><div class="row"><span>#${i+1}</span><span class="pill">${name}</span></div>
-      <div class="controls">
-        <button class="hero" data-act="hero">★ Set Hero</button>
-        <button data-act="toggle">${state.hidden.includes(name)?'Mostrar':'Ocultar'}</button>
-      </div></div>`;
-    card.addEventListener('dragstart',()=>{dragName=name;card.classList.add('dragging')})
-    card.addEventListener('dragend',()=>card.classList.remove('dragging'))
-    card.addEventListener('dragover',e=>e.preventDefault())
-    card.addEventListener('drop',e=>{
-      e.preventDefault(); if(!dragName||dragName===name)return;
-      const a=state.order.indexOf(dragName), b=state.order.indexOf(name);
-      state.order.splice(a,1); state.order.splice(b,0,dragName); render();
-    });
-    card.querySelector('[data-act="hero"]').onclick=()=>{state.hero=name;render()};
-    card.querySelector('[data-act="toggle"]').onclick=()=>{
-      if(state.hidden.includes(name)) state.hidden=state.hidden.filter(x=>x!==name);
-      else state.hidden.push(name); render();
-    };
-    grid.appendChild(card);
-  });
-  preview.innerHTML='';
-  state.order.filter(n=>!state.hidden.includes(n)).forEach(name=>{
-    const img=document.createElement('img'); img.src='assets/photos/'+name; img.alt=''; preview.appendChild(img);
-  });
-}
-document.getElementById('saveBtn').onclick=save;
-document.getElementById('resetBtn').onclick=()=>{localStorage.removeItem('ab_portfolio_manager_demo');state={order:[...defaults],hidden:[],hero:'photo-01.jpg'};render()};
-render();
-</script>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
-const _sb = window.supabase.createClient("https://kuvdvhmitxucqfqendfu.supabase.co", "sb_publishable_yt2XQ6hNfAWtcUjyXovvEA_D1Cab-_o");
-(async()=>{
-  const {data:{session}} = await _sb.auth.getSession();
-  if(!session) location.href='admin.html';
-})();
-</script>
-
-</body></html>
+<script src="supabase-config.js"></script>
+<script src="portfolio-manager.js"></script>
+</body>
+</html>

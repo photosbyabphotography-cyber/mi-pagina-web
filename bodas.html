@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="styles.css">
 </head>
-<body class="portfolio-page">
+<body class="portfolio-page" data-portfolio-category="weddings">
   <header class="header scrolled" id="header">
     <a href="index.html#inicio" class="brand" aria-label="AB Photography inicio"><img src="assets/logo.jpg" alt="AB Photography logo"></a>
     <button class="menu-button" aria-label="Abrir menú" aria-expanded="false" aria-controls="primaryNav"><span></span><span></span></button>
@@ -22,23 +22,23 @@
 
   <main>
     <section class="wedding-hero" id="inicio">
-      <img src="assets/weddings/wedding-004.webp" alt="Boda fotografiada por AB Photography" fetchpriority="high">
+      <img src="assets/weddings/wedding-004.webp" alt="Bodas fotografiada por AB Photography" fetchpriority="high">
       <span class="wedding-hero-shade" aria-hidden="true"></span>
       <div class="wedding-hero-copy">
-        <p class="kicker" id="weddingPageKicker">Portafolio</p>
-        <h1 id="weddingPageTitle">Bodas</h1>
-        <p id="weddingPageIntro">Momentos grandes, detalles pequeños y todo lo que se sintió entre ambos.</p>
-        <a class="portfolio-back" href="index.html#portfolio" id="weddingPageBack">← Volver al portafolio</a>
+        <p class="kicker" id="galleryPageKicker">Portafolio</p>
+        <h1 id="galleryPageTitle">Bodas</h1>
+        <p id="galleryPageIntro">Momentos grandes, detalles pequeños y todo lo que se sintió entre ambos.</p>
+        <a class="portfolio-back" href="index.html#portfolio" id="galleryPageBack">← Volver al portafolio</a>
       </div>
       <a class="wedding-scroll" href="#galeria" aria-label="Ver galería">Desliza <span>↓</span></a>
     </section>
 
     <section class="wedding-intro" id="galeria">
       <p class="kicker">AB Photography · South Texas</p>
-      <h2>Una mirada natural a todo lo que hizo único ese día.</h2>
+      <h2 id="gallerySectionTitle">Una mirada natural a cada historia.</h2>
     </section>
 
-    <section class="wedding-gallery-wrap" aria-label="Galería de bodas">
+    <section class="wedding-gallery-wrap" aria-label="Galería">
       <div class="wedding-gallery">
         <button class="gallery-item reveal" data-full="assets/weddings/wedding-001.webp" aria-label="Abrir fotografía de boda 1">
           <img src="assets/weddings/wedding-001.webp" alt="Fotografía de boda 1 por AB Photography en South Texas" loading="lazy" decoding="async">
@@ -125,6 +125,7 @@
           <img src="assets/weddings/wedding-028.webp" alt="Fotografía de boda 28 por AB Photography en South Texas" loading="lazy" decoding="async">
         </button>
       </div>
+      <div id="portfolioEmpty" class="hidden" style="padding:70px 20px;text-align:center;">Todavía no hay fotografías publicadas en esta categoría.</div>
     </section>
   </main>
 
@@ -138,17 +139,27 @@
     <span class="lightbox-count" aria-live="polite"></span>
   </div>
 
-  <footer class="footer"><div><img src="assets/logo.jpg" alt="AB Photography logo"><p>© <span id="year"></span> AB Photography. Porque algunos momentos merecen volver a sentirse.</p></div><a href="#inicio" id="backTop">Volver arriba</a></footer>
+  <footer class="footer"><div><img src="assets/logo.jpg" alt="AB Photography logo"><p>© <span id="year"></span> AB Photography.</p></div><a href="#inicio" id="backTop">Volver arriba</a></footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
   <script src="script.js"></script>
+  <script src="gallery-live.js"></script>
   <script>
   (() => {
-    const pageCopy = {
-      es: { weddingPageKicker:'Portafolio', weddingPageTitle:'Bodas', weddingPageIntro:'Momentos grandes, detalles pequeños y todo lo que se sintió entre ambos.', weddingPageBack:'← Volver al portafolio' },
-      en: { weddingPageKicker:'Portfolio', weddingPageTitle:'Weddings', weddingPageIntro:'The big moments, the quiet details, and everything that was felt in between.', weddingPageBack:'← Back to portfolio' }
+    const copy = {
+      es: {title:"Bodas", intro:"Momentos grandes, detalles peque\u00f1os y todo lo que se sinti\u00f3 entre ambos.", back:'← Volver al portafolio', section:'Una mirada natural a cada historia.'},
+      en: {title:"Weddings", intro:"The big moments, the quiet details, and everything that was felt in between.", back:'← Back to portfolio', section:'A natural look at every story.'}
     };
-    function apply(lang) { Object.entries(pageCopy[lang] || pageCopy.es).forEach(([id,text]) => { const el=document.getElementById(id); if(el) el.textContent=text; }); }
-    apply(localStorage.getItem('ab-language') || 'es');
-    document.querySelectorAll('[data-set-lang]').forEach(btn => btn.addEventListener('click',()=>setTimeout(()=>apply(btn.dataset.setLang),0)));
+    function apply(lang) {
+      const c=copy[lang]||copy.es;
+      document.getElementById('galleryPageTitle').textContent=c.title;
+      document.getElementById('galleryPageIntro').textContent=c.intro;
+      document.getElementById('galleryPageBack').textContent=c.back;
+      document.getElementById('gallerySectionTitle').textContent=c.section;
+    }
+    apply(localStorage.getItem('ab-language')||'es');
+    document.querySelectorAll('[data-set-lang]').forEach(btn=>btn.addEventListener('click',()=>setTimeout(()=>apply(btn.dataset.setLang),0)));
   })();
   </script>
 </body>
