@@ -20,3 +20,12 @@
 ## Importante
 El botón **Importar las 28 fotos actuales de Bodas** se usa una sola vez.
 Después podrás ocultarlas, ordenarlas o elegir portada desde el portal.
+
+
+## Actualización Drag & Drop
+- Se eliminó el botón de importar fotografías.
+- Se eliminaron los botones Subir/Bajar.
+- El orden se cambia arrastrando miniaturas.
+- El nuevo orden se guarda automáticamente.
+- También puedes arrastrar fotografías desde una carpeta de Windows hacia el área de carga.
+- En celular, mantén presionado el icono ⋮⋮ y arrastra la foto.

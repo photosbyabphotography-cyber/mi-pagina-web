@@ -44,15 +44,18 @@
           <label>Seleccionar fotos
             <input id="files" type="file" accept="image/jpeg,image/png,image/webp" multiple>
           </label>
-          <button id="uploadBtn" type="button">Subir fotografías</button>
+          <button id="uploadBtn" type="button">Agregar fotografías</button>
         </div>
       </div>
+
+      <div id="dropZone" class="drop-zone" tabindex="0" role="button" aria-label="Arrastra fotografías aquí o presiona para seleccionarlas">
+        <strong>Arrastra tus fotografías aquí</strong>
+        <span>o toca para seleccionarlas</span>
+      </div>
+
       <div class="progress" aria-hidden="true"><span id="progressBar"></span></div>
       <div class="status" id="status"></div>
-      <div class="actions" style="margin-top:12px">
-        <button id="importCurrentBtn" type="button" class="secondary">Importar las 28 fotos actuales de Bodas</button>
-      </div>
-      <p class="note">Las imágenes se optimizan en el navegador a WebP antes de subirlas. Para mejores resultados usa JPG, PNG o WebP.</p>
+      <p class="note">Las imágenes se optimizan automáticamente a WebP antes de subirlas. Puedes arrastrarlas desde una carpeta de Windows o seleccionarlas desde el celular.</p>
     </section>
 
     <div id="grid" class="grid"></div>
