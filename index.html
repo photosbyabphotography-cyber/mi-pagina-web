@@ -97,7 +97,7 @@
       </div>
 
       <div class="portfolio-categories">
-        <a class="portfolio-category portfolio-category-active reveal" href="bodas.html">
+        <a class="portfolio-category portfolio-category-active reveal" href="bodas.html" data-cover-category="weddings">
           <img src="assets/weddings/wedding-001.webp" alt="Portafolio de bodas de AB Photography" loading="lazy">
           <span class="portfolio-category-shade" aria-hidden="true"></span>
           <span class="portfolio-category-copy">
@@ -107,7 +107,7 @@
           </span>
         </a>
 
-        <a class="portfolio-category portfolio-category-active reveal" href="quinceaneras.html" aria-label="Abrir galería de quinceañeras">
+        <a class="portfolio-category portfolio-category-active reveal" href="quinceaneras.html" data-cover-category="quinceaneras" aria-label="Abrir galería de quinceañeras">
           <img src="assets/photos/photo-03.jpg" alt="Fotografía de quinceañera por AB Photography" loading="lazy">
           <span class="portfolio-category-shade" aria-hidden="true"></span>
           <span class="portfolio-category-copy">
@@ -117,7 +117,7 @@
           </span>
         </a>
 
-        <a class="portfolio-category portfolio-category-active reveal" href="sesiones.html" aria-label="Abrir galería de sesiones">
+        <a class="portfolio-category portfolio-category-active reveal" href="sesiones.html" data-cover-category="sessions" aria-label="Abrir galería de sesiones">
           <img src="assets/photos/photo-04.jpg" alt="Sesión fotográfica por AB Photography" loading="lazy">
           <span class="portfolio-category-shade" aria-hidden="true"></span>
           <span class="portfolio-category-copy">
@@ -127,7 +127,7 @@
           </span>
         </a>
 
-        <a class="portfolio-category portfolio-category-active reveal" href="eventos.html" aria-label="Abrir galería de eventos">
+        <a class="portfolio-category portfolio-category-active reveal" href="eventos.html" data-cover-category="events" aria-label="Abrir galería de eventos">
           <img src="assets/photos/photo-05.jpg" alt="Fotografía de evento por AB Photography" loading="lazy">
           <span class="portfolio-category-shade" aria-hidden="true"></span>
           <span class="portfolio-category-copy">
@@ -296,6 +296,9 @@
   <a class="studio-login" href="admin.html">Photographer Portal</a>
   </footer>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
   <script src="script.js"></script>
+  <script src="portfolio-covers-live.js"></script>
 </body>
 </html>

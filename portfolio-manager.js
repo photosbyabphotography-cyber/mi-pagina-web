@@ -101,7 +101,7 @@
             ${photo.original_name || 'Fotografía'}
           </div>
           <div class="controls">
-            <button data-action="cover">★ Portada</button>
+            <button data-action="cover">★ Usar como portada</button>
             <button data-action="toggle">${photo.is_visible ? 'Ocultar' : 'Mostrar'}</button>
             <button data-action="delete" class="wide">Eliminar definitivamente</button>
           </div>
@@ -267,7 +267,7 @@
   }
 
   async function setCover(photo) {
-    setStatus('Actualizando portada…');
+    setStatus('Actualizando la portada de la categoría…');
 
     const { error: clearError } = await sb
       .from('portfolio_photos')
