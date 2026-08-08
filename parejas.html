@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Parejas | AB Photography</title>
+  <meta name="description" content="Galería de parejas de AB Photography en Laredo y South Texas.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="portfolio-page" data-portfolio-category="sessions-couples">
+  <header class="header scrolled" id="header">
+    <a href="index.html#inicio" class="brand" aria-label="AB Photography inicio"><img src="assets/logo.jpg" alt="AB Photography logo"></a>
+    <button class="menu-button" aria-label="Abrir menú" aria-expanded="false" aria-controls="primaryNav"><span></span><span></span></button>
+    <div class="language-switcher" aria-label="Cambiar idioma"><button type="button" data-set-lang="en">EN</button><span>/</span><button type="button" data-set-lang="es">ES</button></div>
+    <nav class="nav" id="primaryNav">
+      <a href="index.html#portfolio" id="navPortfolio">Portafolio</a>
+      <a href="index.html#servicios" id="navServices">Servicios</a>
+      <a href="index.html#contacto" class="nav-cta" id="navBook">Disponibilidad</a>
+    </nav>
+  </header>
+  <main>
+    <section class="wedding-hero" id="inicio">
+      <img src="assets/photos/photo-04.jpg" alt="Sesión de pareja fotografiada por AB Photography" fetchpriority="high">
+      <span class="wedding-hero-shade" aria-hidden="true"></span>
+      <div class="wedding-hero-copy">
+        <p class="kicker" id="galleryPageKicker">Sesiones</p>
+        <h1 id="galleryPageTitle">Parejas</h1>
+        <p id="galleryPageIntro">Conexión, complicidad y momentos que se sienten como ustedes.</p>
+        <a class="portfolio-back" href="sesiones.html#tipos" id="galleryPageBack">← Volver a sesiones</a>
+      </div>
+      <a class="wedding-scroll" href="#galeria" aria-label="Ver galería">Desliza <span>↓</span></a>
+    </section>
+    <section class="wedding-intro" id="galeria">
+      <p class="kicker">AB Photography · South Texas</p>
+      <h2 id="gallerySectionTitle">Dos personas. Una historia contada con naturalidad.</h2>
+    </section>
+    <section class="wedding-gallery-wrap" aria-label="Galería">
+      <div class="wedding-gallery"></div>
+      <div id="portfolioEmpty" class="hidden portfolio-empty-state">
+        <p id="emptyTitle">Esta colección está comenzando.</p>
+        <span id="emptyText">Pronto encontrarás nuevas fotografías aquí.</span>
+        <a href="index.html#contacto" id="emptyCta">Consultar disponibilidad</a>
+      </div>
+    </section>
+  </main>
+  <a class="whatsapp" href="https://wa.me/19563079162" target="_blank" rel="noopener" aria-label="Enviar WhatsApp">WhatsApp</a>
+  <div class="lightbox" role="dialog" aria-modal="true" aria-label="Galería de fotografías" aria-hidden="true">
+    <button type="button" class="lightbox-close" aria-label="Cerrar galería">×</button>
+    <button type="button" class="lightbox-arrow lightbox-prev" aria-label="Fotografía anterior">‹</button>
+    <img src="" alt="Fotografía ampliada">
+    <button type="button" class="lightbox-arrow lightbox-next" aria-label="Fotografía siguiente">›</button>
+    <span class="lightbox-count" aria-live="polite"></span>
+  </div>
+  <footer class="footer"><div><img src="assets/logo.jpg" alt="AB Photography logo"><p>© <span id="year"></span> AB Photography.</p></div><a href="#inicio" id="backTop">Volver arriba</a></footer>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="script.js"></script>
+  <script src="gallery-live.js"></script>
+  <script>
+  (() => {
+    const copy = {
+      es: {kicker:'Sesiones',title:'Parejas',intro:'Conexión, complicidad y momentos que se sienten como ustedes.',back:'← Volver a sesiones',section:'Dos personas. Una historia contada con naturalidad.',emptyTitle:'Esta colección está comenzando.',emptyText:'Pronto encontrarás nuevas fotografías aquí.',emptyCta:'Consultar disponibilidad'},
+      en: {kicker:'Sessions',title:'Couples',intro:'Connection, chemistry, and moments that feel true to you.',back:'← Back to sessions',section:'Two people. One story told naturally.',emptyTitle:'This collection is just beginning.',emptyText:'New photographs will be added here soon.',emptyCta:'Check availability'}
+    };
+    function apply(lang) {
+      const c=copy[lang]||copy.es;
+      document.getElementById('galleryPageKicker').textContent=c.kicker;
+      document.getElementById('galleryPageTitle').textContent=c.title;
+      document.getElementById('galleryPageIntro').textContent=c.intro;
+      document.getElementById('galleryPageBack').textContent=c.back;
+      document.getElementById('gallerySectionTitle').textContent=c.section;
+      document.getElementById('emptyTitle').textContent=c.emptyTitle;
+      document.getElementById('emptyText').textContent=c.emptyText;
+      document.getElementById('emptyCta').textContent=c.emptyCta;
+    }
+    apply(localStorage.getItem('ab-language')||'es');
+    document.querySelectorAll('[data-set-lang]').forEach(btn=>btn.addEventListener('click',()=>setTimeout(()=>apply(btn.dataset.setLang),0)));
+  })();
+  </script>
+</body>
+</html>

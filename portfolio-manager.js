@@ -20,7 +20,11 @@
   const labels = {
     weddings:'Bodas',
     quinceaneras:'Quinceañeras',
-    sessions:'Sesiones',
+    sessions:'Sesiones · Archivo actual',
+    'sessions-couples':'Sesiones · Parejas',
+    'sessions-graduation':'Sesiones · Graduación',
+    'sessions-maternity':'Sesiones · Embarazo',
+    'sessions-family':'Sesiones · Familiar',
     events:'Eventos'
   };
 

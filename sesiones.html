@@ -4,11 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sesiones | AB Photography</title>
-  <meta name="description" content="Galería de sesiones de AB Photography en Laredo y South Texas.">
+  <meta name="description" content="Sesiones de parejas, graduación, embarazo y familia por AB Photography en Laredo y South Texas.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="styles.css">
 </head>
-<body class="portfolio-page" data-portfolio-category="sessions">
+<body class="portfolio-page sessions-hub">
   <header class="header scrolled" id="header">
     <a href="index.html#inicio" class="brand" aria-label="AB Photography inicio"><img src="assets/logo.jpg" alt="AB Photography logo"></a>
     <button class="menu-button" aria-label="Abrir menú" aria-expanded="false" aria-controls="primaryNav"><span></span><span></span></button>
@@ -21,59 +21,98 @@
   </header>
 
   <main>
-    <section class="wedding-hero" id="inicio">
-      <img src="assets/photos/photo-04.jpg" alt="Sesiones fotografiada por AB Photography" fetchpriority="high">
+    <section class="wedding-hero sessions-hub-hero" id="inicio">
+      <img src="assets/photos/photo-04.jpg" alt="Sesiones fotografiadas por AB Photography" fetchpriority="high">
       <span class="wedding-hero-shade" aria-hidden="true"></span>
       <div class="wedding-hero-copy">
         <p class="kicker" id="galleryPageKicker">Portafolio</p>
         <h1 id="galleryPageTitle">Sesiones</h1>
-        <p id="galleryPageIntro">Retratos naturales para recordar cada etapa tal como se sintió.</p>
+        <p id="galleryPageIntro">Cada etapa merece ser recordada de una forma propia.</p>
         <a class="portfolio-back" href="index.html#portfolio" id="galleryPageBack">← Volver al portafolio</a>
       </div>
-      <a class="wedding-scroll" href="#galeria" aria-label="Ver galería">Desliza <span>↓</span></a>
+      <a class="wedding-scroll" href="#tipos" aria-label="Ver tipos de sesión"><span id="scrollText">Explorar</span> <span>↓</span></a>
     </section>
 
-    <section class="wedding-intro" id="galeria">
-      <p class="kicker">AB Photography · South Texas</p>
-      <h2 id="gallerySectionTitle">Una mirada natural a cada historia.</h2>
-    </section>
+    <section class="section sessions-types" id="tipos">
+      <div class="section-head reveal sessions-types-head">
+        <p class="kicker" id="sessionsKicker">Elige tu historia</p>
+        <h2 id="sessionsHeading">¿Qué momento quieres guardar?</h2>
+        <p class="sessions-types-intro" id="sessionsIntro">Explora cada colección y encuentra el estilo que mejor representa esta etapa.</p>
+      </div>
 
-    <section class="wedding-gallery-wrap" aria-label="Galería">
-      <div class="wedding-gallery">
+      <div class="portfolio-categories sessions-category-grid">
+        <a class="portfolio-category portfolio-category-active reveal" href="parejas.html" data-cover-category="sessions-couples" aria-label="Abrir galería de parejas">
+          <img src="assets/photos/photo-04.jpg" alt="Sesión de pareja por AB Photography" loading="lazy">
+          <span class="portfolio-category-shade" aria-hidden="true"></span>
+          <span class="portfolio-category-copy">
+            <small id="couplesKicker">Conexión & complicidad</small>
+            <strong id="couplesTitle">Parejas</strong>
+            <em id="couplesLink">Explorar galería →</em>
+          </span>
+        </a>
+
+        <a class="portfolio-category portfolio-category-active reveal" href="graduacion.html" data-cover-category="sessions-graduation" aria-label="Abrir galería de graduación">
+          <img src="assets/photos/photo-16.jpg" alt="Sesión de graduación por AB Photography" loading="lazy">
+          <span class="portfolio-category-shade" aria-hidden="true"></span>
+          <span class="portfolio-category-copy">
+            <small id="graduationKicker">Un logro que permanece</small>
+            <strong id="graduationTitle">Graduación</strong>
+            <em id="graduationLink">Explorar galería →</em>
+          </span>
+        </a>
+
+        <a class="portfolio-category portfolio-category-active reveal" href="embarazo.html" data-cover-category="sessions-maternity" aria-label="Abrir galería de embarazo">
+          <img src="assets/photos/photo-14.jpg" alt="Sesión de embarazo por AB Photography" loading="lazy">
+          <span class="portfolio-category-shade" aria-hidden="true"></span>
+          <span class="portfolio-category-copy">
+            <small id="maternityKicker">La espera más especial</small>
+            <strong id="maternityTitle">Embarazo</strong>
+            <em id="maternityLink">Explorar galería →</em>
+          </span>
+        </a>
+
+        <a class="portfolio-category portfolio-category-active reveal" href="familiar.html" data-cover-category="sessions-family" aria-label="Abrir galería familiar">
+          <img src="assets/photos/photo-08.jpg" alt="Sesión familiar por AB Photography" loading="lazy">
+          <span class="portfolio-category-shade" aria-hidden="true"></span>
+          <span class="portfolio-category-copy">
+            <small id="familyKicker">Recuerdos para toda la vida</small>
+            <strong id="familyTitle">Familiar</strong>
+            <em id="familyLink">Explorar galería →</em>
+          </span>
+        </a>
 
       </div>
-      <div id="portfolioEmpty" class="hidden" style="padding:70px 20px;text-align:center;">Todavía no hay fotografías publicadas en esta categoría.</div>
     </section>
   </main>
 
   <a class="whatsapp" href="https://wa.me/19563079162" target="_blank" rel="noopener" aria-label="Enviar WhatsApp">WhatsApp</a>
-
-  <div class="lightbox" role="dialog" aria-modal="true" aria-label="Galería de fotografías" aria-hidden="true">
-    <button type="button" class="lightbox-close" aria-label="Cerrar galería">×</button>
-    <button type="button" class="lightbox-arrow lightbox-prev" aria-label="Fotografía anterior">‹</button>
-    <img src="" alt="Fotografía ampliada">
-    <button type="button" class="lightbox-arrow lightbox-next" aria-label="Fotografía siguiente">›</button>
-    <span class="lightbox-count" aria-live="polite"></span>
-  </div>
-
   <footer class="footer"><div><img src="assets/logo.jpg" alt="AB Photography logo"><p>© <span id="year"></span> AB Photography.</p></div><a href="#inicio" id="backTop">Volver arriba</a></footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
   <script src="script.js"></script>
-  <script src="gallery-live.js"></script>
+  <script src="portfolio-covers-live.js"></script>
   <script>
   (() => {
     const copy = {
-      es: {title:"Sesiones", intro:"Retratos naturales para recordar cada etapa tal como se sinti\u00f3.", back:'← Volver al portafolio', section:'Una mirada natural a cada historia.'},
-      en: {title:"Sessions", intro:"Natural portraits that preserve every season as it felt.", back:'← Back to portfolio', section:'A natural look at every story.'}
+      es: {
+        title:'Sesiones', intro:'Cada etapa merece ser recordada de una forma propia.', back:'← Volver al portafolio', scroll:'Explorar',
+        kicker:'Elige tu historia', heading:'¿Qué momento quieres guardar?', intro2:'Explora cada colección y encuentra el estilo que mejor representa esta etapa.',
+        ck:'Conexión & complicidad', ct:'Parejas', gk:'Un logro que permanece', gt:'Graduación', mk:'La espera más especial', mt:'Embarazo', fk:'Recuerdos para toda la vida', ft:'Familiar', link:'Explorar galería →'
+      },
+      en: {
+        title:'Sessions', intro:'Every season deserves to be remembered in its own way.', back:'← Back to portfolio', scroll:'Explore',
+        kicker:'Choose your story', heading:'What moment do you want to preserve?', intro2:'Explore each collection and find the style that best represents this season.',
+        ck:'Connection & chemistry', ct:'Couples', gk:'A milestone worth keeping', gt:'Graduation', mk:'The sweetest anticipation', mt:'Maternity', fk:'Memories for a lifetime', ft:'Family', link:'Explore gallery →'
+      }
     };
-    function apply(lang) {
+    function set(id, value){ const el=document.getElementById(id); if(el) el.textContent=value; }
+    function apply(lang){
       const c=copy[lang]||copy.es;
-      document.getElementById('galleryPageTitle').textContent=c.title;
-      document.getElementById('galleryPageIntro').textContent=c.intro;
-      document.getElementById('galleryPageBack').textContent=c.back;
-      document.getElementById('gallerySectionTitle').textContent=c.section;
+      set('galleryPageTitle',c.title); set('galleryPageIntro',c.intro); set('galleryPageBack',c.back); set('scrollText',c.scroll);
+      set('sessionsKicker',c.kicker); set('sessionsHeading',c.heading); set('sessionsIntro',c.intro2);
+      set('couplesKicker',c.ck); set('couplesTitle',c.ct); set('graduationKicker',c.gk); set('graduationTitle',c.gt); set('maternityKicker',c.mk); set('maternityTitle',c.mt); set('familyKicker',c.fk); set('familyTitle',c.ft);
+      ['couplesLink','graduationLink','maternityLink','familyLink'].forEach(id=>set(id,c.link));
     }
     apply(localStorage.getItem('ab-language')||'es');
     document.querySelectorAll('[data-set-lang]').forEach(btn=>btn.addEventListener('click',()=>setTimeout(()=>apply(btn.dataset.setLang),0)));
