@@ -32,6 +32,38 @@
     events:'Eventos'
   };
 
+
+  // Las subcategorías nuevas se guardan dentro de las categorías originales
+  // de Supabase para conservar compatibilidad con la base de datos existente.
+  const categoryRoutes = {
+    'sessions-couples':    { db:'sessions', folder:'couples' },
+    'sessions-graduation': { db:'sessions', folder:'graduation' },
+    'sessions-maternity':  { db:'sessions', folder:'maternity' },
+    'sessions-family':     { db:'sessions', folder:'family' },
+    'events-baptisms':     { db:'events', folder:'baptisms' },
+    'events-birthdays':    { db:'events', folder:'birthdays' },
+    'events-baby-shower':  { db:'events', folder:'baby-shower' },
+    'events-bridal-shower':{ db:'events', folder:'bridal-shower' }
+  };
+
+  function routeFor(uiCategory = categoryEl.value) {
+    return categoryRoutes[uiCategory] || { db:uiCategory, folder:null };
+  }
+
+  function belongsToRoute(photo, uiCategory = categoryEl.value) {
+    const route = routeFor(uiCategory);
+    if (photo.category !== route.db) return false;
+    if (!route.folder) {
+      // "Archivo actual": solo archivos que no estén dentro de una de las
+      // subcarpetas administradas por este portal.
+      const managed = Object.values(categoryRoutes)
+        .filter(r => r.db === route.db)
+        .some(r => (photo.storage_path || '').startsWith(`${route.db}/${r.folder}/`));
+      return !managed;
+    }
+    return (photo.storage_path || '').startsWith(`${route.db}/${route.folder}/`);
+  }
+
   function setStatus(text, error=false) {
     status.textContent = text || '';
     status.style.color = error ? '#7d2e2e' : '#4e4945';
@@ -68,10 +100,11 @@
   async function loadPhotos() {
     setStatus('Cargando fotografías…');
 
+    const route = routeFor();
     const { data, error } = await sb
       .from('portfolio_photos')
       .select('*')
-      .eq('category', categoryEl.value)
+      .eq('category', route.db)
       .order('sort_order', { ascending:true })
       .order('created_at', { ascending:true });
 
@@ -80,7 +113,7 @@
       return;
     }
 
-    photos = data || [];
+    photos = (data || []).filter(photo => belongsToRoute(photo));
     render();
     setStatus(`${photos.length} fotografía(s) en ${labels[categoryEl.value]}. Orden: izquierda a derecha y después continúa en la siguiente fila. Arrastra para cambiarlo.`);
   }
@@ -277,12 +310,14 @@
   async function setCover(photo) {
     setStatus('Actualizando la portada de la categoría…');
 
-    const { error: clearError } = await sb
-      .from('portfolio_photos')
-      .update({is_cover:false})
-      .eq('category', categoryEl.value);
-
-    if (clearError) return setStatus(clearError.message, true);
+    // Limpia la portada únicamente dentro de la subcategoría que está visible.
+    const clearResults = await Promise.all(
+      photos
+        .filter(p => p.id !== photo.id && p.is_cover)
+        .map(p => sb.from('portfolio_photos').update({is_cover:false}).eq('id', p.id))
+    );
+    const failed = clearResults.find(r => r.error);
+    if (failed) return setStatus(failed.error.message, true);
 
     const { error } = await sb
       .from('portfolio_photos')
@@ -351,22 +386,26 @@
     });
   }
 
-  async function nextSortOrder(category) {
-    const { data } = await sb
+  async function nextSortOrder(uiCategory) {
+    const route = routeFor(uiCategory);
+    const { data, error } = await sb
       .from('portfolio_photos')
-      .select('sort_order')
-      .eq('category', category)
-      .order('sort_order', {ascending:false})
-      .limit(1);
+      .select('category,storage_path,sort_order')
+      .eq('category', route.db)
+      .order('sort_order', {ascending:false});
 
-    return (data?.[0]?.sort_order ?? -1) + 1;
+    if (error) return 0;
+    const matching = (data || []).filter(photo => belongsToRoute(photo, uiCategory));
+    return (matching[0]?.sort_order ?? -1) + 1;
   }
 
   async function uploadFiles(files) {
     if (!files.length) return;
 
-    const category = categoryEl.value;
-    let order = await nextSortOrder(category);
+    const uiCategory = categoryEl.value;
+    const route = routeFor(uiCategory);
+    const category = route.db;
+    let order = await nextSortOrder(uiCategory);
 
     for (let i=0; i<files.length; i++) {
       const file = files[i];
@@ -386,7 +425,8 @@
         .replace(/[^a-zA-Z0-9_-]+/g,'-')
         .toLowerCase();
 
-      const path = `${category}/${Date.now()}-${i}-${safeBase}.webp`;
+      const folderPrefix = route.folder ? `${category}/${route.folder}` : category;
+      const path = `${folderPrefix}/${Date.now()}-${i}-${safeBase}.webp`;
 
       const { error: uploadError } = await sb.storage
         .from('portfolio')
@@ -414,7 +454,7 @@
           storage_path:path,
           public_url:publicData.publicUrl,
           original_name:file.name,
-          alt_text:`${labels[category]} fotografiada por AB Photography`,
+          alt_text:`${labels[uiCategory]} fotografiada por AB Photography`,
           sort_order:order++,
           is_visible:true,
           created_by:user?.id || null
