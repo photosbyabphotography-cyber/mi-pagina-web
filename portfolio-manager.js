@@ -25,6 +25,10 @@
     'sessions-graduation':'Sesiones · Graduación',
     'sessions-maternity':'Sesiones · Embarazo',
     'sessions-family':'Sesiones · Familiar',
+    'events-baptisms':'Eventos · Bautizos',
+    'events-birthdays':'Eventos · Cumpleaños',
+    'events-baby-shower':'Eventos · Baby Shower',
+    'events-bridal-shower':'Eventos · Bridal Shower',
     events:'Eventos'
   };
 
