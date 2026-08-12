@@ -319,3 +319,6 @@ h1,h2,h3,p { margin-top: 0; }
   .sessions-category-grid { gap:4px; }
   .sessions-category-grid .portfolio-category { min-height:64svh; }
 }
+
+/* Dynamic category visibility */
+.portfolio-category[hidden]{display:none !important;}

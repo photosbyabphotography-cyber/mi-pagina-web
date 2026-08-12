@@ -117,3 +117,14 @@ select,input[type=file],input[type=text]{width:100%;margin-top:7px;padding:11px;
 @media(min-width:900px){
   .grid{max-width:920px;margin:0 auto}
 }
+
+/* Category visibility controls */
+.category-visibility-panel{margin-top:22px}
+.visibility-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:16px}
+.visibility-row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:13px 14px;border:1px solid rgba(40,32,27,.12);background:#fff}
+.visibility-row strong{font-size:13px;font-weight:600}
+.visibility-toggle{appearance:none;width:42px;height:24px;border-radius:999px;background:#bdb8b4;position:relative;cursor:pointer;transition:.2s}
+.visibility-toggle:after{content:"";position:absolute;width:18px;height:18px;border-radius:50%;background:#fff;top:3px;left:3px;transition:.2s;box-shadow:0 1px 4px rgba(0,0,0,.2)}
+.visibility-toggle:checked{background:#5e4b3d}
+.visibility-toggle:checked:after{transform:translateX(18px)}
+@media(max-width:700px){.visibility-grid{grid-template-columns:1fr}}

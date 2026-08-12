@@ -48,7 +48,13 @@
       const cover = photos.find(photo => photo.is_cover) || photos[0];
       const img = card.querySelector('img');
 
-      if (!cover || !img) continue;
+      if (!cover || !img) {
+        card.hidden = true;
+        card.setAttribute('aria-hidden','true');
+        continue;
+      }
+      card.hidden = false;
+      card.removeAttribute('aria-hidden');
       img.src = cover.public_url;
       img.alt = cover.alt_text || img.alt;
       img.removeAttribute('srcset');

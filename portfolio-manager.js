@@ -64,6 +64,62 @@
     return (photo.storage_path || '').startsWith(`${route.db}/${route.folder}/`);
   }
 
+
+  const managedSections = [
+    ['sessions-couples','Sesiones · Parejas'],
+    ['sessions-graduation','Sesiones · Graduación'],
+    ['sessions-maternity','Sesiones · Embarazo'],
+    ['sessions-family','Sesiones · Familiar'],
+    ['events-baptisms','Eventos · Bautizos'],
+    ['events-birthdays','Eventos · Cumpleaños'],
+    ['events-baby-shower','Eventos · Baby Shower'],
+    ['events-bridal-shower','Eventos · Bridal Shower']
+  ];
+
+  async function renderVisibilityControls() {
+    const host = document.getElementById('categoryVisibilityGrid');
+    if (!host) return;
+
+    const { data, error } = await sb
+      .from('portfolio_photos')
+      .select('id,category,storage_path,is_visible');
+    if (error) {
+      host.innerHTML = '<p class="muted">No se pudo cargar la visibilidad.</p>';
+      return;
+    }
+
+    host.innerHTML = '';
+    managedSections.forEach(([uiCategory,label]) => {
+      const rows = (data || []).filter(p => belongsToRoute(p, uiCategory));
+      const hasPhotos = rows.length > 0;
+      const shown = hasPhotos && rows.some(p => p.is_visible);
+
+      const row = document.createElement('label');
+      row.className = 'visibility-row';
+      row.innerHTML = `<span><strong>${label}</strong><br><small>${hasPhotos ? (shown ? 'Visible en la web' : 'Oculta') : 'Sin fotos · se oculta automáticamente'}</small></span>
+        <input class="visibility-toggle" type="checkbox" ${shown ? 'checked' : ''} ${hasPhotos ? '' : 'disabled'} aria-label="Cambiar visibilidad de ${label}">`;
+
+      const input = row.querySelector('input');
+      input.addEventListener('change', async () => {
+        const makeVisible = input.checked;
+        const results = await Promise.all(rows.map(p =>
+          sb.from('portfolio_photos').update({is_visible:makeVisible}).eq('id',p.id)
+        ));
+        const failed = results.find(r => r.error);
+        if (failed) {
+          input.checked = !makeVisible;
+          setStatus('No se pudo cambiar la visibilidad: ' + failed.error.message, true);
+          return;
+        }
+        setStatus(`${label}: ${makeVisible ? 'visible' : 'oculta'} en la página.`);
+        await renderVisibilityControls();
+        if (uiCategory === categoryEl.value) await loadPhotos();
+      });
+
+      host.appendChild(row);
+    });
+  }
+
   function setStatus(text, error=false) {
     status.textContent = text || '';
     status.style.color = error ? '#7d2e2e' : '#4e4945';
@@ -115,6 +171,7 @@
 
     photos = (data || []).filter(photo => belongsToRoute(photo));
     render();
+    renderVisibilityControls();
     setStatus(`${photos.length} fotografía(s) en ${labels[categoryEl.value]}. Orden: izquierda a derecha y después continúa en la siguiente fila. Arrastra para cambiarlo.`);
   }
 
