@@ -70,11 +70,16 @@ h1,h2,h3,p { margin-top: 0; }
 .story-card:hover img, .gallery-item:hover img { transform: scale(1.018); }
 
 .services { background: var(--cream); }
-.service-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); border-top: 1px solid var(--line); }
+.services-intro { display:grid; grid-template-columns:minmax(0,1.45fr) minmax(280px,.55fr); gap:clamp(48px,8vw,130px); align-items:end; }
+.services-intro .section-head { margin-bottom:0; }
+.services-summary { padding-bottom:8px; }
+.services-summary p { max-width:560px; margin:0 0 28px; color:var(--muted); line-height:1.8; }
+.text-link { display:inline-flex; padding-bottom:5px; border-bottom:1px solid currentColor; font-size:.68rem; font-weight:600; letter-spacing:.14em; text-transform:uppercase; }
+.service-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); margin-top:clamp(58px,8vw,105px); border-top: 1px solid var(--line); }
 .service-card { min-height: 300px; padding: 42px 32px; border-bottom: 1px solid var(--line); }
-.service-card:nth-child(odd) { border-right: 1px solid var(--line); }
+.service-card:not(:last-child) { border-right: 1px solid var(--line); }
 .service-card > span, .step > span { color: var(--accent); font-size: .68rem; letter-spacing: .15em; }
-.service-card h3 { margin: 55px 0 15px; font-family: var(--serif); font-size: clamp(2.3rem, 3.3vw, 3.8rem); font-weight: 400; }
+.service-card h3 { margin: 55px 0 15px; font-family: var(--serif); font-size: clamp(2rem, 2.65vw, 3.2rem); line-height:1; font-weight: 400; }
 .service-card p { max-width: 520px; margin-bottom: 0; color: var(--muted); line-height: 1.75; }
 
 .experience { padding-top: clamp(100px, 13vw, 180px); padding-bottom: clamp(100px, 13vw, 180px); display: grid; grid-template-columns: 1.05fr .95fr; gap: clamp(60px, 9vw, 150px); }
@@ -143,6 +148,9 @@ h1,h2,h3,p { margin-top: 0; }
 @media (max-width: 1050px) {
   .gallery { columns: 2; }
   .experience, .contact { grid-template-columns: 1fr; }
+  .services-intro { grid-template-columns:1fr; }
+  .service-grid { grid-template-columns:1fr; }
+  .service-card:not(:last-child) { border-right:0; }
 }
 
 @media (max-width: 767px) {
