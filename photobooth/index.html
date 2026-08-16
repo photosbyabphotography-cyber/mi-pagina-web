@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#080808">
-<title>AB Photobooth V3.2 Digital QR</title>
+<title>AB Photobooth V3.3 Privado 3 días</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 <style>
@@ -83,7 +83,7 @@ select,input{background:#1b1b1b;color:#fff;border:1px solid #333;border-radius:9
     <div class="row"><label>Formato</label><select id="format"><option value="strip">Tira 2x6</option><option value="4x6">4x6</option></select></div>
     <div class="row"><label>Calidad digital</label><select id="quality"><option value=".72">Ligera</option><option value=".80" selected>Balanceada</option><option value=".88">Alta</option></select></div>
   </div>
-  <p class="small">AB Photobooth V3.2 Digital QR</p>
+  <p class="small">AB Photobooth V3.3 Privado 3 días</p>
 </section>
 
 <canvas id="capture" class="hidden"></canvas>
@@ -130,7 +130,7 @@ async function uploadAndQR(){
   currentBlob=await optimizedBlob();
   const kb=Math.round(currentBlob.size/1024);
   $('statusText').textContent=`Foto optimizada: ${kb} KB. Subiendo…`;
-  setProgress(25);
+  setProgress(20);
 
   if(!navigator.onLine){
     $('statusText').textContent=`Sin conexión. Foto lista (${kb} KB). Puedes guardarla ahora; el QR necesita conexión.`;
@@ -139,25 +139,52 @@ async function uploadAndQR(){
   }
 
   const eventSlug=slug($('eventName').value);
+  const accessToken=id();
   currentPath=`sessions/${eventSlug}/${Date.now()}-${id()}.jpg`;
 
-  const {error}=await sb.storage.from('photobooth').upload(currentPath,currentBlob,{
-    contentType:'image/jpeg',cacheControl:'604800',upsert:false
+  // 1) Subir al bucket PRIVADO.
+  const {error:uploadError}=await sb.storage.from('photobooth').upload(currentPath,currentBlob,{
+    contentType:'image/jpeg',
+    cacheControl:'3600',
+    upsert:false
   });
 
-  if(error){
-    console.error(error);
-    $('statusText').textContent='No se pudo subir: '+error.message;
+  if(uploadError){
+    console.error(uploadError);
+    $('statusText').textContent='No se pudo subir la foto: '+uploadError.message;
     setProgress(0);
     return;
   }
 
+  setProgress(65);
+
+  // 2) Registrar token de acceso. expires_at queda en 3 días por default.
+  const {error:registerError}=await sb.from('photobooth_photos').insert({
+    access_token: accessToken,
+    path: currentPath,
+    event_slug: eventSlug
+  });
+
+  if(registerError){
+    console.error(registerError);
+    $('statusText').textContent='La foto subió, pero no se pudo crear el QR: '+registerError.message;
+    setProgress(65);
+    return;
+  }
+
   setProgress(100);
-  const downloadUrl=DOWNLOAD_BASE+'?p='+encodeURIComponent(currentPath);
-  $('statusText').textContent=`¡Lista! ${kb} KB · Escanea el QR.`;
+
+  // El QR NO contiene la ruta de Storage; solo un token aleatorio.
+  const downloadUrl=DOWNLOAD_BASE+'?t='+encodeURIComponent(accessToken);
+  $('statusText').textContent=`¡Lista! ${kb} KB · QR válido por 3 días.`;
   $('qrWrap').classList.remove('hidden');
   $('qr').innerHTML='';
-  currentQR=new QRCode($('qr'),{text:downloadUrl,width:170,height:170,correctLevel:QRCode.CorrectLevel.M});
+  currentQR=new QRCode($('qr'),{
+    text:downloadUrl,
+    width:170,
+    height:170,
+    correctLevel:QRCode.CorrectLevel.M
+  });
 }
 
 async function shoot(){

@@ -1,0 +1,62 @@
+AB PHOTOBOOTH V3.3 — PRIVADO + BORRADO AUTOMÁTICO A LOS 3 DÍAS
+
+ORDEN RECOMENDADO
+
+1) SUPABASE > SQL EDITOR
+   - Abre SUPABASE-PHOTOBOOTH-PRIVADO-3DIAS.sql
+   - Copia todo.
+   - Run.
+   - Debe terminar con Success.
+   IMPORTANTE: después de este paso los QR viejos de la versión pública dejan de funcionar.
+
+2) SUPABASE > EDGE FUNCTIONS
+   Crea y despliega DOS funciones:
+
+   A) photobooth-link
+      - Copia el contenido de:
+        supabase-functions/photobooth-link/index.ts
+      - Debe permitir llamadas públicas / Verify JWT OFF.
+      - No pegues ninguna service_role key en el código.
+        Supabase inyecta SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY en Edge Functions.
+
+   B) photobooth-cleanup
+      - Copia el contenido de:
+        supabase-functions/photobooth-cleanup/index.ts
+      - Verify JWT OFF.
+      - Esta función SOLO elimina fotos cuyo expires_at ya pasó.
+
+3) SUPABASE > CRON / INTEGRATIONS > CRON
+   - Programa una llamada HTTP cada hora a:
+     https://kuvdvhmitxucqfqendfu.supabase.co/functions/v1/photobooth-cleanup
+   - Método: POST
+   - Frecuencia sugerida: cada hora.
+   Así una foto se borrará después de 72 horas, normalmente dentro de la hora siguiente
+   a su expiración.
+
+4) GITHUB / CLOUDFLARE
+   - Reemplaza tu proyecto por esta versión integrada.
+   - Commit + Push.
+   - Cloudflare desplegará:
+       /photobooth/
+       /booth.html
+
+5) PRUEBA
+   - Abre https://abphotographytx.com/photobooth/
+   - Toma una sesión.
+   - Debe mostrar QR válido por 3 días.
+   - Escanéalo con otro teléfono.
+   - booth.html pedirá a photobooth-link una URL firmada corta.
+   - En Supabase Storage el bucket photobooth debe verse PRIVATE, no PUBLIC.
+
+SEGURIDAD DE ESTA VERSIÓN
+- El bucket no tiene URL pública.
+- El QR lleva un UUID aleatorio, no la ruta del archivo.
+- La tabla que relaciona token -> archivo no tiene lectura anónima.
+- La Edge Function valida que la foto no haya expirado.
+- La URL firmada de Storage dura máximo 10 minutos.
+- A las 72 horas la foto expira; el cron borra el archivo y su registro.
+
+NOTA
+El bucket permite uploads anónimos desde el photobooth porque el iPad no inicia sesión.
+Esto es suficiente para el prototipo comercial, con límite de 2 MB y paths restringidos
+a sessions/. Más adelante se puede endurecer todavía más usando signed upload URLs.
