@@ -34,6 +34,27 @@ nav a.active{font-weight:700}
 .msg.ok{display:block;background:#eaf5ec;border:1px solid #bed6c2}
 .msg.err{display:block;background:#fdecec;border:1px solid #e2bcbc}
 .top-actions{display:flex;gap:8px;align-items:center}
+
+.photobooth-panel{margin-top:0}
+.pb-toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px;flex-wrap:wrap}
+.pb-events{display:grid;gap:16px}
+.pb-event{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.pb-event-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:16px 18px;border-bottom:1px solid #eee}
+.pb-event-title{font-family:Georgia,serif;font-size:20px}
+.pb-event-meta{font-size:12px;color:var(--muted)}
+.pb-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;padding:14px}
+.pb-photo{border:1px solid #e5ddd7;border-radius:10px;overflow:hidden;background:#faf8f6}
+.pb-thumb{aspect-ratio:2/3;background:#eee;display:grid;place-items:center;overflow:hidden}
+.pb-thumb img{width:100%;height:100%;object-fit:cover}
+.pb-info{padding:10px;font-size:12px;line-height:1.45}
+.pb-actions{display:flex;gap:6px;padding:0 10px 10px}
+.pb-actions button,.pb-actions a{flex:1;padding:9px 8px;font-size:11px;text-align:center;border:0;background:#24211f;color:#fff;text-decoration:none;cursor:pointer}
+.pb-actions .danger{background:#7f3f3f}
+.pb-empty{padding:30px;text-align:center;color:var(--muted);border:1px dashed var(--line);background:#fff;border-radius:12px}
+.pb-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px}
+.pb-summary .stat b{font-size:22px;font-family:Georgia,serif}
+@media(max-width:700px){.pb-summary{grid-template-columns:1fr}.pb-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
 @media(max-width:800px){.portal{grid-template-columns:1fr}.grid{grid-template-columns:1fr}.status{grid-template-columns:1fr 1fr}}
 </style>
 </head>
@@ -71,6 +92,7 @@ nav a.active{font-weight:700}
     <nav>
       <a class="active" href="admin.html">Nuevo contrato</a>
       <a href="portfolio-manager.html">Portfolio Manager</a>
+      <a href="#" id="photoboothLink">Photobooth</a>
       <a href="#" id="contractsLink">Contratos guardados</a>
       <a href="#">Firmados</a>
       <a href="#">Clientes</a>
@@ -78,7 +100,7 @@ nav a.active{font-weight:700}
     <p class="note">Sesión conectada con Supabase Auth. Los contratos creados desde aquí se guardan en tu base de datos.</p>
   </aside>
 
-  <section>
+  <section id="contractsView">
     <div class="status">
       <div class="stat"><b>Draft</b><br><small>Creado</small></div>
       <div class="stat"><b>Sent</b><br><small>Enviado</small></div>
@@ -121,6 +143,27 @@ nav a.active{font-weight:700}
     <div id="contractsPanel" class="card hidden" style="margin-top:20px">
       <h2>Contratos recientes</h2>
       <div id="contractsList" class="note">Cargando...</div>
+    </div>
+  </section>
+
+  <section id="photoboothView" class="hidden">
+    <div class="pb-toolbar">
+      <div>
+        <h1 style="margin:0 0 6px">Photobooth</h1>
+        <div class="note">Eventos y fotografías activas. Las fotos expiran y se eliminan automáticamente después de 3 días.</div>
+      </div>
+      <button id="refreshPhotobooth" class="secondary">Actualizar</button>
+    </div>
+
+    <div class="pb-summary">
+      <div class="stat"><b id="pbEventCount">0</b><br><small>Eventos activos</small></div>
+      <div class="stat"><b id="pbPhotoCount">0</b><br><small>Fotos activas</small></div>
+      <div class="stat"><b id="pbExpiringCount">0</b><br><small>Expiran en 24 h</small></div>
+    </div>
+
+    <div id="pbMsg" class="msg"></div>
+    <div id="pbEvents" class="pb-events">
+      <div class="pb-empty">Abre la sección Photobooth para cargar los eventos.</div>
     </div>
   </section>
 </section>
@@ -193,6 +236,182 @@ applySession().catch(err => {
   msg.className='msg err';
   msg.textContent='Error conectando con Supabase: ' + err.message;
 });
+
+
+const contractsView = document.getElementById('contractsView');
+const photoboothView = document.getElementById('photoboothView');
+const photoboothLink = document.getElementById('photoboothLink');
+
+function showContractsView() {
+  contractsView.classList.remove('hidden');
+  photoboothView.classList.add('hidden');
+  document.querySelectorAll('nav a').forEach(a=>a.classList.remove('active'));
+  document.querySelector('nav a[href="admin.html"]')?.classList.add('active');
+}
+
+function showPhotoboothView() {
+  contractsView.classList.add('hidden');
+  photoboothView.classList.remove('hidden');
+  document.querySelectorAll('nav a').forEach(a=>a.classList.remove('active'));
+  photoboothLink.classList.add('active');
+  loadPhotobooth();
+}
+
+photoboothLink.addEventListener('click', (e) => {
+  e.preventDefault();
+  showPhotoboothView();
+});
+
+document.getElementById('refreshPhotobooth').addEventListener('click', loadPhotobooth);
+
+function niceEventName(slug) {
+  return (slug || 'evento')
+    .split('-')
+    .filter(Boolean)
+    .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' ');
+}
+
+function remainingText(expiresAt) {
+  const ms = new Date(expiresAt).getTime() - Date.now();
+  if (ms <= 0) return 'Expirada';
+  const hours = Math.floor(ms / 3600000);
+  const days = Math.floor(hours / 24);
+  const remHours = hours % 24;
+  if (days > 0) return `${days} d ${remHours} h`;
+  return `${Math.max(1,hours)} h`;
+}
+
+async function loadPhotobooth() {
+  const wrap = document.getElementById('pbEvents');
+  const msg = document.getElementById('pbMsg');
+  msg.className = 'msg';
+  msg.textContent = '';
+  wrap.innerHTML = '<div class="pb-empty">Cargando fotografías privadas…</div>';
+
+  const { data: { session } } = await sbClient.auth.getSession();
+  if (!session) {
+    wrap.innerHTML = '<div class="pb-empty">Tu sesión expiró. Vuelve a iniciar sesión.</div>';
+    return;
+  }
+
+  const { data: rows, error } = await sbClient
+    .from('photobooth_photos')
+    .select('access_token,path,event_slug,created_at,expires_at')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    wrap.innerHTML = '<div class="pb-empty">No se pudieron cargar las fotos.</div>';
+    msg.className = 'msg err';
+    msg.textContent = 'Supabase: ' + error.message + '. Si acabas de instalar esta versión, ejecuta el SQL PHOTOBOOTH-ADMIN-POLICIES.sql.';
+    return;
+  }
+
+  const active = (rows || []).filter(r => new Date(r.expires_at).getTime() > Date.now());
+  const eventMap = new Map();
+  for (const row of active) {
+    if (!eventMap.has(row.event_slug)) eventMap.set(row.event_slug, []);
+    eventMap.get(row.event_slug).push(row);
+  }
+
+  document.getElementById('pbEventCount').textContent = eventMap.size;
+  document.getElementById('pbPhotoCount').textContent = active.length;
+  document.getElementById('pbExpiringCount').textContent =
+    active.filter(r => new Date(r.expires_at).getTime() - Date.now() <= 86400000).length;
+
+  if (!active.length) {
+    wrap.innerHTML = '<div class="pb-empty">No hay fotografías activas del Photobooth.</div>';
+    return;
+  }
+
+  wrap.innerHTML = '';
+
+  for (const [eventSlug, photos] of eventMap) {
+    const eventEl = document.createElement('div');
+    eventEl.className = 'pb-event';
+    eventEl.innerHTML = `
+      <div class="pb-event-head">
+        <div>
+          <div class="pb-event-title">${escapeHtml(niceEventName(eventSlug))}</div>
+          <div class="pb-event-meta">${photos.length} ${photos.length === 1 ? 'foto activa' : 'fotos activas'}</div>
+        </div>
+        <div class="pb-event-meta">Más reciente: ${new Date(photos[0].created_at).toLocaleString()}</div>
+      </div>
+      <div class="pb-grid"></div>
+    `;
+    wrap.appendChild(eventEl);
+    const grid = eventEl.querySelector('.pb-grid');
+
+    for (const photo of photos) {
+      const card = document.createElement('div');
+      card.className = 'pb-photo';
+
+      const { data: signed, error: signError } = await sbClient.storage
+        .from('photobooth')
+        .createSignedUrl(photo.path, 3600);
+
+      const url = signed?.signedUrl || '';
+      card.innerHTML = `
+        <div class="pb-thumb">
+          ${url ? `<img src="${escapeAttr(url)}" alt="Foto de ${escapeAttr(niceEventName(eventSlug))}" loading="lazy">` : '<span class="note">Sin miniatura</span>'}
+        </div>
+        <div class="pb-info">
+          <b>${new Date(photo.created_at).toLocaleString()}</b><br>
+          Expira en: <span class="gold">${escapeHtml(remainingText(photo.expires_at))}</span>
+        </div>
+        <div class="pb-actions">
+          ${url ? `<a href="${escapeAttr(url)}" target="_blank" rel="noopener">Ver</a>` : ''}
+          <button class="danger" data-token="${escapeAttr(photo.access_token)}" data-path="${escapeAttr(photo.path)}">Borrar</button>
+        </div>
+      `;
+      grid.appendChild(card);
+    }
+  }
+
+  wrap.querySelectorAll('button[data-token]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const path = btn.dataset.path;
+      const token = btn.dataset.token;
+      if (!confirm('¿Borrar esta foto del Photobooth ahora? El QR dejará de funcionar.')) return;
+
+      btn.disabled = true;
+      btn.textContent = 'Borrando…';
+
+      const { error: storageError } = await sbClient.storage
+        .from('photobooth')
+        .remove([path]);
+
+      if (storageError) {
+        alert('No se pudo borrar el archivo: ' + storageError.message);
+        btn.disabled = false;
+        btn.textContent = 'Borrar';
+        return;
+      }
+
+      const { error: rowError } = await sbClient
+        .from('photobooth_photos')
+        .delete()
+        .eq('access_token', token);
+
+      if (rowError) {
+        alert('El archivo se borró, pero no se pudo limpiar el registro: ' + rowError.message);
+      }
+
+      await loadPhotobooth();
+    });
+  });
+}
+
+function escapeHtml(value='') {
+  return String(value)
+    .replaceAll('&','&amp;')
+    .replaceAll('<','&lt;')
+    .replaceAll('>','&gt;')
+    .replaceAll('"','&quot;')
+    .replaceAll("'","&#039;");
+}
+function escapeAttr(value='') { return escapeHtml(value); }
+
 
 document.getElementById('contractForm').addEventListener('submit', async (e) => {
   e.preventDefault();

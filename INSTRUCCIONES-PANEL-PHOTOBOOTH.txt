@@ -1,0 +1,29 @@
+PANEL PHOTOBOOTH DENTRO DEL STUDIO PORTAL
+
+1. Antes de subir esta versión:
+   Supabase > SQL Editor > ejecuta PHOTOBOOTH-ADMIN-POLICIES.sql
+
+2. Después sube este proyecto al mismo repositorio de la web y Push.
+   Cloudflare desplegará admin.html actualizado.
+
+3. Abre:
+   https://abphotographytx.com/admin.html
+
+4. Inicia sesión como siempre y verás "Photobooth" en el menú.
+
+EL PANEL MUESTRA
+- Eventos activos.
+- Número de fotos activas.
+- Fotos que expiran en las próximas 24 horas.
+- Miniaturas mediante signed URL de 1 hora.
+- Fecha/hora de creación.
+- Tiempo aproximado restante.
+- Ver fotografía.
+- Borrar manualmente.
+
+SEGURIDAD
+- El bucket photobooth permanece PRIVATE.
+- Anon no recibe permisos de lectura/listado/borrado.
+- Los permisos nuevos son para role authenticated.
+- Las miniaturas son URLs firmadas de corta duración.
+- El cleanup automático de 3 días sigue funcionando igual.
