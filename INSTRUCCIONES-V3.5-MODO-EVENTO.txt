@@ -1,0 +1,6 @@
+V3.5 Modo Evento
+- PIN administrador configurable (4–6 números), predeterminado 2468.
+- Modo Evento bloquea Configuración y requiere PIN para salir.
+- Regreso automático configurable: 20/30/45/60 s; predeterminado 30 s.
+- Conserva QR privado, expiración 3 días, cleanup y panel del fotógrafo.
+- No requiere SQL nuevo.

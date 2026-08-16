@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#080808">
-<title>AB Photobooth V3.3 Privado 3 días</title>
+<title>AB Photobooth V3.5 Modo Evento</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 <style>
@@ -43,10 +43,14 @@ canvas{width:100%;height:auto;display:block}
 .row{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #222;padding:14px 0;gap:14px} .row:last-child{border:0}
 select,input{background:#1b1b1b;color:#fff;border:1px solid #333;border-radius:9px;padding:9px;max-width:190px}
 .progress{height:6px;background:#252525;border-radius:99px;overflow:hidden;margin-top:10px} .bar{height:100%;width:0;background:#bd8c4b;transition:.2s}
+
+.event-lock{position:fixed;left:12px;top:calc(10px + env(safe-area-inset-top));z-index:25;background:#171717dd;border:1px solid #333;color:#fff;border-radius:999px;padding:7px 10px;font-size:11px}.event-lock.locked{color:#e1bd84}
+.return-note{font-size:12px;color:#aaa;margin-top:10px}
+.pin-modal{position:fixed;inset:0;z-index:100;background:#000c;display:flex;align-items:center;justify-content:center;padding:20px}.pin-card{width:min(92vw,380px);background:#141414;border:1px solid #39312a;border-radius:20px;padding:24px;text-align:center}.pin-card input{width:100%;font-size:26px;text-align:center;letter-spacing:8px;margin:16px 0;padding:14px}.pin-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 </style>
 </head>
 <body>
-<div id="net" class="network">RED</div>
+<button id="eventLock" class="event-lock">🔓 ADMIN</button><div id="net" class="network">RED</div>
 
 <section id="home" class="screen active">
   <div class="logo">AB</div><div class="brand">PHOTOGRAPHY</div>
@@ -71,7 +75,7 @@ select,input{background:#1b1b1b;color:#fff;border:1px solid #333;border-radius:9
     <div id="qrWrap" class="hidden"><div id="qr"></div><div class="small">Escanea para descargar en tu teléfono.</div></div>
   </div>
   <div class="actions"><button id="retake" class="btn secondary">REPETIR</button><button id="save" class="btn primary">GUARDAR</button></div>
-  <button id="finish" class="btn secondary" style="margin-top:10px">FINALIZAR</button>
+  <button id="finish" class="btn secondary" style="margin-top:10px">FINALIZAR</button><div id="returnNote" class="return-note hidden"></div>
 </section>
 
 <section id="settingsScreen" class="screen">
@@ -81,12 +85,12 @@ select,input{background:#1b1b1b;color:#fff;border:1px solid #333;border-radius:9
     <div class="row"><label>Fotos</label><select id="photoCount"><option>1</option><option>2</option><option>3</option><option selected>4</option></select></div>
     <div class="row"><label>Temporizador</label><select id="timer"><option value="3">3 segundos</option><option value="5">5 segundos</option></select></div>
     <div class="row"><label>Formato</label><select id="format"><option value="strip">Tira 2x6</option><option value="4x6">4x6</option></select></div>
-    <div class="row"><label>Calidad digital</label><select id="quality"><option value=".72">Ligera</option><option value=".80" selected>Balanceada</option><option value=".88">Alta</option></select></div>
+    <div class="row"><label>Calidad digital</label><select id="quality"><option value=".72">Ligera</option><option value=".80" selected>Balanceada</option><option value=".88">Alta</option></select></div><div class="row"><label>PIN administrador</label><input id="adminPin" type="password" inputmode="numeric" maxlength="6" value="2468"></div><div class="row"><label>Regreso automático</label><select id="autoReturn"><option value="20">20 segundos</option><option value="30" selected>30 segundos</option><option value="45">45 segundos</option><option value="60">60 segundos</option></select></div><div class="row"><label>Modo evento</label><button id="toggleEventMode" class="btn secondary" type="button">ACTIVAR</button></div>
   </div>
-  <p class="small">AB Photobooth V3.3 Privado 3 días</p>
+  <p class="small">AB Photobooth V3.5 Modo Evento</p>
 </section>
 
-<canvas id="capture" class="hidden"></canvas>
+<div id="pinModal" class="pin-modal hidden"><div class="pin-card"><h2>Acceso administrador</h2><div class="small">Ingresa el PIN.</div><input id="pinEntry" type="password" inputmode="numeric" maxlength="6"><div id="pinError" class="small" style="color:#e8a0a0;min-height:18px"></div><div class="pin-actions"><button id="pinCancel" class="btn secondary">CANCELAR</button><button id="pinOk" class="btn primary">ENTRAR</button></div></div></div><canvas id="capture" class="hidden"></canvas>
 
 <script>
 const SUPABASE_URL="https://kuvdvhmitxucqfqendfu.supabase.co";
@@ -100,6 +104,16 @@ let stream=null,facing='user',photos=[],busy=false,currentBlob=null,currentPath=
 function show(id){screens.forEach(x=>x.classList.remove('active'));$(id).classList.add('active')}
 function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
 function network(){let n=$('net');if(navigator.onLine){n.textContent='● ONLINE';n.className='network online'}else{n.textContent='● OFFLINE';n.className='network offline'}}
+
+let eventMode=localStorage.getItem('ab_event_mode')==='1',returnTimer=null,returnTick=null,pendingAdminAction=null;
+function configuredPin(){return localStorage.getItem('ab_admin_pin')||$('adminPin')?.value||'2468'}
+function syncEventModeUI(){const b=$('eventLock'),t=$('toggleEventMode');if(eventMode){b.textContent='🔒 MODO EVENTO';b.classList.add('locked');if(t)t.textContent='DESACTIVAR';$('settingsBtn').textContent='🔒 CONFIGURACIÓN'}else{b.textContent='🔓 ADMIN';b.classList.remove('locked');if(t)t.textContent='ACTIVAR';$('settingsBtn').textContent='CONFIGURACIÓN'}}
+function askPin(a){pendingAdminAction=a;$('pinEntry').value='';$('pinError').textContent='';$('pinModal').classList.remove('hidden')}
+function closePin(){$('pinModal').classList.add('hidden');pendingAdminAction=null}
+function verifyPin(){if($('pinEntry').value!==configuredPin()){$('pinError').textContent='PIN incorrecto';return}const a=pendingAdminAction;closePin();if(a==='settings')show('settingsScreen');if(a==='unlock'){eventMode=false;localStorage.setItem('ab_event_mode','0');syncEventModeUI();show('home')}}
+function cancelAutoReturn(){clearTimeout(returnTimer);clearInterval(returnTick);$('returnNote')?.classList.add('hidden')}
+function startAutoReturn(){cancelAutoReturn();if(!eventMode)return;let left=parseInt(localStorage.getItem('ab_auto_return')||$('autoReturn').value||'30'),note=$('returnNote');note.classList.remove('hidden');note.textContent=`Nueva sesión en ${left} s`;returnTick=setInterval(()=>{left--;note.textContent=`Nueva sesión en ${Math.max(0,left)} s`},1000);returnTimer=setTimeout(()=>{cancelAutoReturn();photos=[];currentBlob=null;currentPath=null;show('home')},left*1000)}
+
 network();addEventListener('online',network);addEventListener('offline',network);
 function stop(){if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}}
 async function camera(){stop();stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:facing},width:{ideal:1920},height:{ideal:1080}},audio:false});$('video').srcObject=stream;$('video').classList.toggle('mirror',facing==='user');await $('video').play()}
@@ -127,64 +141,20 @@ async function optimizedBlob(){
 function setProgress(p){$('bar').style.width=Math.max(0,Math.min(100,p))+'%'}
 
 async function uploadAndQR(){
-  currentBlob=await optimizedBlob();
-  const kb=Math.round(currentBlob.size/1024);
-  $('statusText').textContent=`Foto optimizada: ${kb} KB. Subiendo…`;
-  setProgress(20);
-
-  if(!navigator.onLine){
-    $('statusText').textContent=`Sin conexión. Foto lista (${kb} KB). Puedes guardarla ahora; el QR necesita conexión.`;
-    setProgress(0);
-    return;
-  }
-
-  const eventSlug=slug($('eventName').value);
-  const accessToken=id();
+  currentBlob=await optimizedBlob(); const kb=Math.round(currentBlob.size/1024);
+  $('statusText').textContent=`Foto optimizada: ${kb} KB. Subiendo…`; setProgress(20);
+  if(!navigator.onLine){$('statusText').textContent=`Sin conexión. Foto lista (${kb} KB). Puedes guardarla ahora; el QR necesita conexión.`;setProgress(0);return}
+  const eventSlug=slug($('eventName').value), accessToken=id();
   currentPath=`sessions/${eventSlug}/${Date.now()}-${id()}.jpg`;
-
-  // 1) Subir al bucket PRIVADO.
-  const {error:uploadError}=await sb.storage.from('photobooth').upload(currentPath,currentBlob,{
-    contentType:'image/jpeg',
-    cacheControl:'3600',
-    upsert:false
-  });
-
-  if(uploadError){
-    console.error(uploadError);
-    $('statusText').textContent='No se pudo subir la foto: '+uploadError.message;
-    setProgress(0);
-    return;
-  }
-
+  const {error:up}=await sb.storage.from('photobooth').upload(currentPath,currentBlob,{contentType:'image/jpeg',cacheControl:'3600',upsert:false});
+  if(up){$('statusText').textContent='No se pudo subir: '+up.message;setProgress(0);return}
   setProgress(65);
-
-  // 2) Registrar token de acceso. expires_at queda en 3 días por default.
-  const {error:registerError}=await sb.from('photobooth_photos').insert({
-    access_token: accessToken,
-    path: currentPath,
-    event_slug: eventSlug
-  });
-
-  if(registerError){
-    console.error(registerError);
-    $('statusText').textContent='La foto subió, pero no se pudo crear el QR: '+registerError.message;
-    setProgress(65);
-    return;
-  }
-
-  setProgress(100);
-
-  // El QR NO contiene la ruta de Storage; solo un token aleatorio.
-  const downloadUrl=DOWNLOAD_BASE+'?t='+encodeURIComponent(accessToken);
+  const {error:reg}=await sb.from('photobooth_photos').insert({access_token:accessToken,path:currentPath,event_slug:eventSlug});
+  if(reg){$('statusText').textContent='La foto subió, pero no se pudo crear el QR: '+reg.message;return}
+  setProgress(100); const downloadUrl=DOWNLOAD_BASE+'?t='+encodeURIComponent(accessToken);
   $('statusText').textContent=`¡Lista! ${kb} KB · QR válido por 3 días.`;
-  $('qrWrap').classList.remove('hidden');
-  $('qr').innerHTML='';
-  currentQR=new QRCode($('qr'),{
-    text:downloadUrl,
-    width:170,
-    height:170,
-    correctLevel:QRCode.CorrectLevel.M
-  });
+  $('qrWrap').classList.remove('hidden');$('qr').innerHTML='';
+  currentQR=new QRCode($('qr'),{text:downloadUrl,width:170,height:170,correctLevel:QRCode.CorrectLevel.M});
 }
 
 async function shoot(){
@@ -192,7 +162,7 @@ async function shoot(){
   let total=+$('photoCount').value;
   for(let i=0;i<total;i++){$('shotLabel').textContent=`${i+1} / ${total}`;await cd();photos.push(snap());fx();await sleep(650)}
   await layout();stop();$('session').textContent='SESIÓN '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
-  show('reviewScreen');await uploadAndQR();busy=false
+  show('reviewScreen');await uploadAndQR();startAutoReturn();busy=false
 }
 
 async function save(){
@@ -206,12 +176,17 @@ $('start').onclick=begin;
 $('cancel').onclick=()=>{stop();show('home')};
 $('flip').onclick=async()=>{facing=facing==='user'?'environment':'user';await camera()};
 $('shoot').onclick=shoot;
-$('retake').onclick=begin;
-$('back').onclick=begin;
+$('retake').onclick=()=>{cancelAutoReturn();begin()};
+$('back').onclick=()=>{cancelAutoReturn();begin()};
 $('save').onclick=save;
-$('finish').onclick=()=>show('home');
-$('settingsBtn').onclick=()=>show('settingsScreen');
-$('settingsBack').onclick=()=>show('home');
+$('finish').onclick=()=>{cancelAutoReturn();show('home')};
+$('settingsBtn').onclick=()=>eventMode?askPin('settings'):show('settingsScreen');
+$('settingsBack').onclick=()=>{localStorage.setItem('ab_admin_pin',$('adminPin').value||'2468');localStorage.setItem('ab_auto_return',$('autoReturn').value||'30');show('home')};
+
+
+$('eventLock').onclick=()=>eventMode?askPin('unlock'):show('settingsScreen');$('pinCancel').onclick=closePin;$('pinOk').onclick=verifyPin;$('pinEntry').onkeydown=e=>{if(e.key==='Enter')verifyPin()};
+$('toggleEventMode').onclick=()=>{const pin=($('adminPin').value||'').trim();if(!/^\d{4,6}$/.test(pin)){alert('Usa un PIN de 4 a 6 números.');return}localStorage.setItem('ab_admin_pin',pin);localStorage.setItem('ab_auto_return',$('autoReturn').value||'30');eventMode=!eventMode;localStorage.setItem('ab_event_mode',eventMode?'1':'0');syncEventModeUI();show('home')};
+$('adminPin').value=localStorage.getItem('ab_admin_pin')||'2468';$('autoReturn').value=localStorage.getItem('ab_auto_return')||'30';syncEventModeUI();
 
 if('serviceWorker'in navigator)addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
 </script>
