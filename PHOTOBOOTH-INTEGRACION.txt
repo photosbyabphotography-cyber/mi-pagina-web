@@ -1,0 +1,17 @@
+AB Photography - Integracion Photobooth
+
+Rutas finales esperadas en Cloudflare:
+- https://abphotographytx.com/                  Web principal
+- https://abphotographytx.com/photobooth/      App del photobooth
+- https://abphotographytx.com/booth.html?p=... Pagina de descarga del QR
+
+Supabase:
+- Bucket portfolio: sin cambios
+- Bucket photobooth: ya configurado mediante SQL
+
+Para publicar:
+1. Reemplazar/actualizar el contenido del repositorio actual de la pagina con esta carpeta.
+2. Commit y Push.
+3. Esperar el deployment de Cloudflare.
+4. Abrir /photobooth/ en Safari y hacer una sesion.
+5. Escanear el QR con otro telefono.

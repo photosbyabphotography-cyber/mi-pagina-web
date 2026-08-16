@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0b0b0b">
+  <title>Tu foto | AB Photography</title>
+  <style>
+    :root{--bg:#090909;--gold:#c49a60;--gold2:#e1c18d;--text:#f7f1e8;--muted:#aaa198}
+    *{box-sizing:border-box}
+    html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    body{min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:28px 18px}
+    .wrap{width:min(94vw,620px);text-align:center}
+    .logo{font:italic 70px/.9 Georgia,serif;color:var(--gold2);letter-spacing:-7px}
+    .brand{font-size:11px;letter-spacing:6px;color:var(--gold2);margin:12px 0 28px}
+    h1{font:400 34px/1.1 Georgia,serif;letter-spacing:2px;margin:0 0 8px}
+    .sub{color:var(--muted);font-size:13px;line-height:1.5;margin:0 auto 22px;max-width:430px}
+    .photo-card{background:#141414;border:1px solid #2b2b2b;border-radius:18px;padding:10px;box-shadow:0 22px 70px #0008}
+    #photo{display:none;width:100%;height:auto;border-radius:12px;background:#111}
+    .btn{display:none;width:100%;margin-top:14px;border:1px solid var(--gold);border-radius:14px;background:linear-gradient(#c69b62,#9c6c33);color:#fff;text-decoration:none;padding:17px;font-weight:700;letter-spacing:1px}
+    .state{padding:46px 18px;color:var(--muted);line-height:1.5}
+    .footer{font-size:11px;color:#777;margin-top:18px}
+  </style>
+  <script src="supabase-config.js"></script>
+</head>
+<body>
+  <main class="wrap">
+    <div class="logo">AB</div>
+    <div class="brand">PHOTOGRAPHY</div>
+    <h1>Tu recuerdo está listo</h1>
+    <p class="sub">Guarda tu fotografía en tu teléfono y disfruta el momento.</p>
+
+    <div class="photo-card">
+      <div id="state" class="state">Cargando tu fotografía…</div>
+      <img id="photo" alt="Fotografía de photobooth por AB Photography">
+    </div>
+    <a id="download" class="btn" download="AB-Photography-Photobooth.jpg">DESCARGAR FOTO</a>
+    <div class="footer">AB Photography · Digital Photobooth</div>
+  </main>
+
+<script>
+(() => {
+  const cfg = window.AB_SUPABASE;
+  const params = new URLSearchParams(location.search);
+  const path = params.get('p');
+  const state = document.getElementById('state');
+  const photo = document.getElementById('photo');
+  const download = document.getElementById('download');
+
+  function fail(msg){
+    state.textContent = msg;
+    state.style.display = 'block';
+    photo.style.display = 'none';
+    download.style.display = 'none';
+  }
+
+  if (!cfg?.url || !path || !path.startsWith('sessions/')) {
+    fail('No encontramos esta fotografía. Revisa el código QR e inténtalo nuevamente.');
+    return;
+  }
+
+  // Prevent path tricks; only allow the photobooth sessions namespace.
+  if (path.includes('..') || path.includes('://') || path.includes('\\')) {
+    fail('Enlace de fotografía no válido.');
+    return;
+  }
+
+  const encodedPath = path.split('/').map(encodeURIComponent).join('/');
+  const publicUrl = `${cfg.url}/storage/v1/object/public/photobooth/${encodedPath}`;
+
+  photo.onload = () => {
+    state.style.display = 'none';
+    photo.style.display = 'block';
+    download.href = publicUrl;
+    download.style.display = 'block';
+  };
+  photo.onerror = () => fail('La fotografía todavía no está disponible. Intenta nuevamente en unos segundos.');
+  photo.src = publicUrl;
+})();
+</script>
+</body>
+</html>

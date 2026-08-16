@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#080808">
+<title>AB Photobooth V3.2 Digital QR</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+<style>
+:root{--bg:#080808;--gold:#bd8c4b;--gold2:#e1bd84;--text:#f7f1e8;--muted:#aaa198}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;min-height:100%}
+body{min-height:100dvh}
+.screen{display:none;min-height:100dvh;padding:calc(22px + env(safe-area-inset-top)) 18px calc(22px + env(safe-area-inset-bottom));text-align:center}
+.active{display:flex;flex-direction:column;align-items:center;justify-content:center}
+.logo{font:italic 72px/.85 Georgia,serif;color:var(--gold2);letter-spacing:-7px}
+.brand{letter-spacing:6px;font-size:11px;color:var(--gold2);margin-top:14px}
+h1{font:400 clamp(34px,9vw,56px) Georgia,serif;letter-spacing:4px;margin:34px 0 10px}
+.gold{color:var(--gold2)} .muted{color:var(--muted)}
+.btn{border:1px solid var(--gold);border-radius:14px;padding:16px 20px;font-weight:650;letter-spacing:1px}
+.primary{background:linear-gradient(#c69b62,#9c6c33);color:#fff} .secondary{background:#171717;color:#fff}
+.big{width:min(88vw,420px);min-height:80px}
+.network{position:fixed;right:12px;top:calc(10px + env(safe-area-inset-top));z-index:20;background:#171717dd;border:1px solid #333;border-radius:999px;padding:7px 10px;font-size:11px}
+.online{color:#bfe7c3} .offline{color:#f1c38c}
+.top{width:100%;max-width:700px;display:grid;grid-template-columns:48px 1fr 48px;align-items:center;margin-bottom:12px}
+.icon{width:44px;height:44px;border-radius:12px;border:1px solid #333;background:#151515;color:#fff;font-size:22px}
+.camera{position:relative;width:min(94vw,690px);height:min(66dvh,760px);background:#000;border-radius:22px;overflow:hidden;border:1px solid #2b2b2b}
+video{width:100%;height:100%;object-fit:contain} .mirror{transform:scaleX(-1)}
+.count{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#0004;font:700 min(40vw,220px) Georgia}
+.flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none} .flash.fire{animation:fl .22s ease-out}
+@keyframes fl{0%{opacity:0}18%{opacity:1}100%{opacity:0}}
+.hidden{display:none!important}
+.shutter{width:76px;height:76px;border-radius:50%;background:white;border:8px solid #080808;outline:3px solid var(--gold2);margin:20px}
+.review{width:min(94vw,560px);max-height:52dvh;overflow:auto;background:#151515;padding:10px;border-radius:16px;border:1px solid #292929}
+canvas{width:100%;height:auto;display:block}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:min(94vw,560px);margin-top:12px}
+.status{width:min(94vw,560px);background:#121212;border:1px solid #292929;border-radius:14px;padding:14px;margin-top:10px}
+.small{font-size:12px;color:#aaa;line-height:1.45} .code{font:600 12px monospace;color:var(--gold2)}
+#qr{width:190px;height:190px;background:white;border-radius:14px;padding:10px;margin:12px auto 8px;display:flex;align-items:center;justify-content:center}
+#qr img,#qr canvas{width:170px!important;height:170px!important}
+.settings{width:min(94vw,560px);background:#121212;border:1px solid #292929;border-radius:16px;padding:16px;text-align:left}
+.row{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #222;padding:14px 0;gap:14px} .row:last-child{border:0}
+select,input{background:#1b1b1b;color:#fff;border:1px solid #333;border-radius:9px;padding:9px;max-width:190px}
+.progress{height:6px;background:#252525;border-radius:99px;overflow:hidden;margin-top:10px} .bar{height:100%;width:0;background:#bd8c4b;transition:.2s}
+</style>
+</head>
+<body>
+<div id="net" class="network">RED</div>
+
+<section id="home" class="screen active">
+  <div class="logo">AB</div><div class="brand">PHOTOGRAPHY</div>
+  <h1>PHOTOBOOTH</h1><p class="gold">CAPTURA EL MOMENTO</p><p class="muted">DISFRUTA · SONRÍE · REPITE</p>
+  <button id="start" class="btn primary big">📷<br>TOCAR PARA COMENZAR</button>
+  <button id="settingsBtn" class="btn secondary" style="margin-top:14px">CONFIGURACIÓN</button>
+</section>
+
+<section id="cameraScreen" class="screen">
+  <div class="top"><button id="cancel" class="icon">←</button><div id="shotLabel">1 / 4</div><button id="flip" class="icon">↻</button></div>
+  <div class="camera"><video id="video" autoplay muted playsinline class="mirror"></video><div id="countdown" class="count hidden">3</div><div id="flash" class="flash"></div></div>
+  <button id="shoot" class="shutter"></button><p class="small">Toca el botón blanco. Las fotos se tomarán automáticamente.</p>
+</section>
+
+<section id="reviewScreen" class="screen">
+  <div class="top"><button id="back" class="icon">←</button><div>TU FOTO</div><div></div></div>
+  <div class="review"><canvas id="strip"></canvas></div>
+  <div class="status">
+    <div id="session" class="code"></div>
+    <div id="statusText" class="small">Preparando tu foto…</div>
+    <div class="progress"><div id="bar" class="bar"></div></div>
+    <div id="qrWrap" class="hidden"><div id="qr"></div><div class="small">Escanea para descargar en tu teléfono.</div></div>
+  </div>
+  <div class="actions"><button id="retake" class="btn secondary">REPETIR</button><button id="save" class="btn primary">GUARDAR</button></div>
+  <button id="finish" class="btn secondary" style="margin-top:10px">FINALIZAR</button>
+</section>
+
+<section id="settingsScreen" class="screen">
+  <div class="top"><button id="settingsBack" class="icon">←</button><div>CONFIGURACIÓN</div><div></div></div>
+  <div class="settings">
+    <div class="row"><label>Evento</label><input id="eventName" value="Evento AB"></div>
+    <div class="row"><label>Fotos</label><select id="photoCount"><option>1</option><option>2</option><option>3</option><option selected>4</option></select></div>
+    <div class="row"><label>Temporizador</label><select id="timer"><option value="3">3 segundos</option><option value="5">5 segundos</option></select></div>
+    <div class="row"><label>Formato</label><select id="format"><option value="strip">Tira 2x6</option><option value="4x6">4x6</option></select></div>
+    <div class="row"><label>Calidad digital</label><select id="quality"><option value=".72">Ligera</option><option value=".80" selected>Balanceada</option><option value=".88">Alta</option></select></div>
+  </div>
+  <p class="small">AB Photobooth V3.2 Digital QR</p>
+</section>
+
+<canvas id="capture" class="hidden"></canvas>
+
+<script>
+const SUPABASE_URL="https://kuvdvhmitxucqfqendfu.supabase.co";
+const SUPABASE_KEY="sb_publishable_yt2XQ6hNfAWtcUjyXovvEA_D1Cab-_o";
+const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const DOWNLOAD_BASE='https://abphotographytx.com/booth.html';
+
+const $=x=>document.getElementById(x),screens=[...document.querySelectorAll('.screen')];
+let stream=null,facing='user',photos=[],busy=false,currentBlob=null,currentPath=null,currentQR=null;
+
+function show(id){screens.forEach(x=>x.classList.remove('active'));$(id).classList.add('active')}
+function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
+function network(){let n=$('net');if(navigator.onLine){n.textContent='● ONLINE';n.className='network online'}else{n.textContent='● OFFLINE';n.className='network offline'}}
+network();addEventListener('online',network);addEventListener('offline',network);
+function stop(){if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}}
+async function camera(){stop();stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:facing},width:{ideal:1920},height:{ideal:1080}},audio:false});$('video').srcObject=stream;$('video').classList.toggle('mirror',facing==='user');await $('video').play()}
+async function begin(){photos=[];currentBlob=null;currentPath=null;show('cameraScreen');try{await camera()}catch(e){alert('Permite acceso a la cámara y abre el booth mediante HTTPS.');show('home')}}
+async function cd(){let sec=+$('timer').value;$('countdown').classList.remove('hidden');for(let i=sec;i;i--){$('countdown').textContent=i;await sleep(800)}$('countdown').classList.add('hidden')}
+function fx(){let f=$('flash');f.classList.remove('fire');void f.offsetWidth;f.classList.add('fire')}
+function snap(){let v=$('video'),c=$('capture'),vw=v.videoWidth,vh=v.videoHeight,scale=Math.min(1,1600/Math.max(vw,vh));c.width=Math.round(vw*scale);c.height=Math.round(vh*scale);let x=c.getContext('2d');if(facing==='user'){x.save();x.translate(c.width,0);x.scale(-1,1);x.drawImage(v,0,0,vw,vh,0,0,c.width,c.height);x.restore()}else{x.drawImage(v,0,0,vw,vh,0,0,c.width,c.height)}return c.toDataURL('image/jpeg',.92)}
+function load(src){return new Promise(r=>{let i=new Image;i.onload=()=>r(i);i.src=src})}
+function slug(s){return (s||'evento').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,48)||'evento'}
+function id(){return (crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random().toString(16).slice(2))}
+
+async function layout(){
+  let c=$('strip'),x=c.getContext('2d'),mode=$('format').value,W=600,H=mode==='strip'?1800:900;
+  c.width=W;c.height=H;x.fillStyle='#f4ede3';x.fillRect(0,0,W,H);
+  let m=38,top=105,bottom=75,gap=14,count=photos.length,cols=mode==='4x6'?2:1,rows=Math.ceil(count/cols),pw=(W-m*2-gap*(cols-1))/cols,ph=(H-top-bottom-gap*(rows-1))/rows;
+  for(let i=0;i<count;i++){let im=await load(photos[i]),col=i%cols,row=Math.floor(i/cols),dx=m+col*(pw+gap),dy=top+row*(ph+gap),ir=im.width/im.height,tr=pw/ph,dw=pw,dh=ph,ox=0,oy=0;if(ir>tr){dh=pw/ir;oy=(ph-dh)/2}else{dw=ph*ir;ox=(pw-dw)/2}x.drawImage(im,dx+ox,dy+oy,dw,dh)}
+  x.fillStyle='#34291d';x.textAlign='center';x.font='italic 46px Georgia';x.fillText('AB',W/2,54);x.font='14px sans-serif';x.fillText($('eventName').value||'AB PHOTOGRAPHY',W/2,82);x.fillStyle='#8d6b3f';x.fillText('CAPTURA · SONRÍE · REPITE',W/2,H-34)
+}
+
+async function optimizedBlob(){
+  const q=parseFloat($('quality').value)||.80;
+  return await new Promise(resolve=>$('strip').toBlob(resolve,'image/jpeg',q));
+}
+
+function setProgress(p){$('bar').style.width=Math.max(0,Math.min(100,p))+'%'}
+
+async function uploadAndQR(){
+  currentBlob=await optimizedBlob();
+  const kb=Math.round(currentBlob.size/1024);
+  $('statusText').textContent=`Foto optimizada: ${kb} KB. Subiendo…`;
+  setProgress(25);
+
+  if(!navigator.onLine){
+    $('statusText').textContent=`Sin conexión. Foto lista (${kb} KB). Puedes guardarla ahora; el QR necesita conexión.`;
+    setProgress(0);
+    return;
+  }
+
+  const eventSlug=slug($('eventName').value);
+  currentPath=`sessions/${eventSlug}/${Date.now()}-${id()}.jpg`;
+
+  const {error}=await sb.storage.from('photobooth').upload(currentPath,currentBlob,{
+    contentType:'image/jpeg',cacheControl:'604800',upsert:false
+  });
+
+  if(error){
+    console.error(error);
+    $('statusText').textContent='No se pudo subir: '+error.message;
+    setProgress(0);
+    return;
+  }
+
+  setProgress(100);
+  const downloadUrl=DOWNLOAD_BASE+'?p='+encodeURIComponent(currentPath);
+  $('statusText').textContent=`¡Lista! ${kb} KB · Escanea el QR.`;
+  $('qrWrap').classList.remove('hidden');
+  $('qr').innerHTML='';
+  currentQR=new QRCode($('qr'),{text:downloadUrl,width:170,height:170,correctLevel:QRCode.CorrectLevel.M});
+}
+
+async function shoot(){
+  if(busy)return;busy=true;photos=[];$('qrWrap').classList.add('hidden');setProgress(0);
+  let total=+$('photoCount').value;
+  for(let i=0;i<total;i++){$('shotLabel').textContent=`${i+1} / ${total}`;await cd();photos.push(snap());fx();await sleep(650)}
+  await layout();stop();$('session').textContent='SESIÓN '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  show('reviewScreen');await uploadAndQR();busy=false
+}
+
+async function save(){
+  const blob=currentBlob||await optimizedBlob();
+  const file=new File([blob],'AB-Photobooth.jpg',{type:'image/jpeg'});
+  if(navigator.canShare?.({files:[file]})){try{await navigator.share({files:[file],title:'AB Photography'})}catch(e){}}
+  else{let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=file.name;a.click()}
+}
+
+$('start').onclick=begin;
+$('cancel').onclick=()=>{stop();show('home')};
+$('flip').onclick=async()=>{facing=facing==='user'?'environment':'user';await camera()};
+$('shoot').onclick=shoot;
+$('retake').onclick=begin;
+$('back').onclick=begin;
+$('save').onclick=save;
+$('finish').onclick=()=>show('home');
+$('settingsBtn').onclick=()=>show('settingsScreen');
+$('settingsBack').onclick=()=>show('home');
+
+if('serviceWorker'in navigator)addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+</script>
+</body>
+</html>
