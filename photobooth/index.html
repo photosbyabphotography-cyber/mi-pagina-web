@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#080808">
-<title>AB Photobooth V3.8 iPad + Idioma</title>
+<title>AB Photobooth V3.9 Alta Calidad</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 <style>
@@ -165,7 +165,7 @@ select,input{background:#1b1b1b;color:#fff;border:1px solid #333;border-radius:9
 
 
 /* V3.7: encuadre normal para photobooth */
-.camera video{transform:scaleX(-1) scale(1.35)!important}
+.camera video{transform:scaleX(-1)!important}
 
 @media (orientation:landscape) and (min-width:700px){
  #cameraScreen .shutter{width:104px;height:104px}
@@ -210,9 +210,9 @@ select,input{background:#1b1b1b;color:#fff;border:1px solid #333;border-radius:9
     <div class="row"><label>Fotos</label><select id="photoCount"><option>1</option><option>2</option><option>3</option><option selected>4</option></select></div>
     <div class="row"><label>Temporizador</label><select id="timer"><option value="3">3 segundos</option><option value="5">5 segundos</option></select></div>
     <div class="row"><label>Formato</label><select id="format"><option value="strip">Tira 2x6</option><option value="4x6">4x6</option></select></div>
-    <div class="row"><label>Calidad digital</label><select id="quality"><option value=".72">Ligera</option><option value=".80" selected>Balanceada</option><option value=".88">Alta</option></select></div><div class="row"><label id="languageLabel">Idioma</label><select id="language"><option value="es">Español</option><option value="en">English</option></select></div><div class="row"><label>PIN administrador</label><input id="adminPin" type="password" inputmode="numeric" maxlength="6" value="2468"></div><div class="row"><label>Regreso automático</label><select id="autoReturn"><option value="20">20 segundos</option><option value="30" selected>30 segundos</option><option value="45">45 segundos</option><option value="60">60 segundos</option></select></div><div class="row"><label>Modo evento</label><button id="toggleEventMode" class="btn secondary" type="button">ACTIVAR</button></div>
+    <div class="row"><label>Calidad digital</label><select id="quality"><option value=".82">Ligera</option><option value=".90">Balanceada</option><option value=".94" selected>Alta</option></select></div><div class="row"><label id="languageLabel">Idioma</label><select id="language"><option value="es">Español</option><option value="en">English</option></select></div><div class="row"><label>PIN administrador</label><input id="adminPin" type="password" inputmode="numeric" maxlength="6" value="2468"></div><div class="row"><label>Regreso automático</label><select id="autoReturn"><option value="20">20 segundos</option><option value="30" selected>30 segundos</option><option value="45">45 segundos</option><option value="60">60 segundos</option></select></div><div class="row"><label>Modo evento</label><button id="toggleEventMode" class="btn secondary" type="button">ACTIVAR</button></div>
   </div>
-  <p class="small">AB Photobooth V3.8 iPad + Idioma</p>
+  <p class="small">AB Photobooth V3.9 Alta Calidad</p>
 </section>
 
 <div id="pinModal" class="pin-modal hidden"><div class="pin-card"><h2>Acceso administrador</h2><div class="small">Ingresa el PIN.</div><input id="pinEntry" type="password" inputmode="numeric" maxlength="6"><div id="pinError" class="small" style="color:#e8a0a0;min-height:18px"></div><div class="pin-actions"><button id="pinCancel" class="btn secondary">CANCELAR</button><button id="pinOk" class="btn primary">ENTRAR</button></div></div></div><canvas id="capture" class="hidden"></canvas>
@@ -229,7 +229,7 @@ let stream=null,facing='user',photos=[],busy=false,currentBlob=null,currentPath=
 function show(id){screens.forEach(x=>x.classList.remove('active'));$(id).classList.add('active')}
 function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
 
-const NORMAL_CAMERA_ZOOM=1.35;
+const NORMAL_CAMERA_ZOOM=1.0;
 function normalCameraRect(v){
   const vw=v.videoWidth||1,vh=v.videoHeight||1;
   const sw=vw/NORMAL_CAMERA_ZOOM,sh=vh/NORMAL_CAMERA_ZOOM;
@@ -262,6 +262,35 @@ function startAutoReturn(){cancelAutoReturn();if(!eventMode)return;let left=pars
 
 network();addEventListener('online',network);addEventListener('offline',network);
 function stop(){if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}}
+
+async function getBestFrontCameraStream(){
+  // Ask once so Safari exposes camera labels, then prefer a front camera
+  // whose label does not look ultra-wide. Falls back safely on iPadOS.
+  let probe=null;
+  try{
+    probe=await getBestFrontCameraStream();
+    const devices=await navigator.mediaDevices.enumerateDevices();
+    const cams=devices.filter(d=>d.kind==='videoinput');
+    const front=cams.filter(d=>/front|user|facetime|true.?depth/i.test(d.label));
+    const normal=front.find(d=>!/ultra|wide|0\.5/i.test(d.label)) || front[0];
+    if(normal?.deviceId){
+      probe.getTracks().forEach(t=>t.stop());
+      probe=null;
+      return await navigator.mediaDevices.getUserMedia({
+        video:{deviceId:{exact:normal.deviceId},width:{ideal:3840},height:{ideal:2160}},
+        audio:false
+      });
+    }
+    if(probe) return probe;
+  }catch(e){
+    if(probe) probe.getTracks().forEach(t=>t.stop());
+  }
+  return navigator.mediaDevices.getUserMedia({
+    video:{facingMode:{ideal:'user'},width:{ideal:3840},height:{ideal:2160}},
+    audio:false
+  });
+}
+
 async function camera(){stop();stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:facing},width:{ideal:1920},height:{ideal:1080}},audio:false});$('video').srcObject=stream;$('video').classList.toggle('mirror',facing==='user');await $('video').play()}
 async function begin(){photos=[];currentBlob=null;currentPath=null;show('cameraScreen');try{await camera()}catch(e){alert('Permite acceso a la cámara y abre el booth mediante HTTPS.');show('home')}}
 async function cd(){let sec=+$('timer').value;$('countdown').classList.remove('hidden');for(let i=sec;i;i--){$('countdown').textContent=i;await sleep(800)}$('countdown').classList.add('hidden')}

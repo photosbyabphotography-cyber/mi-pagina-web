@@ -1,0 +1,16 @@
+AB PHOTOBOOTH V3.9 — ALTA CALIDAD
+
+CAMBIOS
+- Se eliminó el zoom digital 1.35x para no perder detalle.
+- Solicita a Safari la máxima resolución práctica disponible (ideal 3840x2160).
+- Intenta preferir una cámara frontal normal cuando iPadOS expone varias cámaras.
+- Si Safari no permite distinguir lentes, usa automáticamente la frontal disponible.
+- Calidad JPEG: Ligera 82%, Balanceada 90%, Alta 94% (Alta por defecto).
+- Mantiene Español / English.
+- Mantiene landscape, Modo Evento, PIN, QR privado, cleanup y panel.
+
+IMPORTANTE
+Safari/iPadOS decide finalmente qué resolución y lente física expone a una web.
+Esta versión prioriza calidad real y evita simular una lente normal mediante zoom digital.
+
+No requiere cambios en Supabase.
