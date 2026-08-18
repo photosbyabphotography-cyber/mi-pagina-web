@@ -1,0 +1,7 @@
+AB PHOTOBOOTH V3.8
+- Configuración > Idioma: Español / English.
+- El idioma queda guardado en el iPad.
+- Cámara ajustada a 1.35x para reducir más el aspecto angular.
+- Disparador más grande en landscape.
+- Conserva Modo Evento, PIN, QR privado, expiración de 3 días y panel.
+- No requiere cambios en Supabase.
