@@ -1,0 +1,17 @@
+AB PHOTOBOOTH V3.6 — iPAD LANDSCAPE
+
+Optimizado para usar el iPad acostado.
+
+CAMBIOS
+- Cámara horizontal aprovechando casi todo el ancho.
+- Botón de disparo a la derecha.
+- Resultado en dos columnas: composición a la izquierda y QR/estado a la derecha.
+- QR más grande en landscape.
+- Configuración en dos columnas.
+- Mantiene Modo Evento + PIN.
+- Mantiene regreso automático.
+- Mantiene QR privado, expiración 3 días, cleanup y panel de fotógrafo.
+- En iPhone/vertical conserva el diseño responsive anterior.
+
+No requiere cambios en Supabase.
+Solo reemplaza los archivos del repositorio y haz Push.

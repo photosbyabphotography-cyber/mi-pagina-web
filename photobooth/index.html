@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#080808">
-<title>AB Photobooth V3.5 Modo Evento</title>
+<title>AB Photobooth V3.6 iPad Landscape</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 <style>
@@ -47,6 +47,122 @@ select,input{background:#1b1b1b;color:#fff;border:1px solid #333;border-radius:9
 .event-lock{position:fixed;left:12px;top:calc(10px + env(safe-area-inset-top));z-index:25;background:#171717dd;border:1px solid #333;color:#fff;border-radius:999px;padding:7px 10px;font-size:11px}.event-lock.locked{color:#e1bd84}
 .return-note{font-size:12px;color:#aaa;margin-top:10px}
 .pin-modal{position:fixed;inset:0;z-index:100;background:#000c;display:flex;align-items:center;justify-content:center;padding:20px}.pin-card{width:min(92vw,380px);background:#141414;border:1px solid #39312a;border-radius:20px;padding:24px;text-align:center}.pin-card input{width:100%;font-size:26px;text-align:center;letter-spacing:8px;margin:16px 0;padding:14px}.pin-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+/* ===== iPad / tablet landscape ===== */
+@media (orientation:landscape) and (min-width:700px){
+  body{overflow:hidden}
+  .screen{
+    min-height:100dvh;
+    padding:calc(14px + env(safe-area-inset-top))
+            calc(20px + env(safe-area-inset-right))
+            calc(14px + env(safe-area-inset-bottom))
+            calc(20px + env(safe-area-inset-left));
+  }
+
+  #home.active{justify-content:center}
+  #home .logo{font-size:64px}
+  #home h1{font-size:44px;margin:20px 0 8px}
+  #home .big{min-height:68px;width:360px}
+
+  #cameraScreen.active{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) 150px;
+    grid-template-rows:auto 1fr;
+    column-gap:20px;
+    align-items:center;
+    justify-items:center;
+  }
+  #cameraScreen .top{
+    grid-column:1 / -1;
+    width:min(94vw,1100px);
+    margin-bottom:4px;
+  }
+  #cameraScreen .camera{
+    grid-column:1;
+    width:min(78vw,1000px);
+    height:min(78dvh,690px);
+    border-radius:20px;
+  }
+  #cameraScreen .shutter{
+    grid-column:2;
+    grid-row:2;
+    width:88px;
+    height:88px;
+    margin:0;
+  }
+  #cameraScreen > .small{
+    position:fixed;
+    right:22px;
+    bottom:calc(18px + env(safe-area-inset-bottom));
+    width:145px;
+    margin:0;
+  }
+
+  #reviewScreen.active{
+    display:grid;
+    grid-template-columns:minmax(320px,0.95fr) minmax(340px,0.7fr);
+    grid-template-rows:auto 1fr;
+    column-gap:24px;
+    justify-content:center;
+    align-items:center;
+  }
+  #reviewScreen .top{
+    grid-column:1 / -1;
+    width:min(94vw,1100px);
+    margin-bottom:4px;
+  }
+  #reviewScreen .review{
+    grid-column:1;
+    grid-row:2;
+    width:min(48vw,520px);
+    max-height:78dvh;
+    align-self:center;
+  }
+  #reviewScreen .status{
+    grid-column:2;
+    grid-row:2;
+    width:min(42vw,460px);
+    margin:0;
+    align-self:center;
+  }
+  #reviewScreen .actions{
+    grid-column:2;
+    grid-row:2;
+    width:min(42vw,460px);
+    align-self:end;
+    margin-bottom:72px;
+  }
+  #reviewScreen #finish{
+    position:fixed;
+    right:calc(24px + env(safe-area-inset-right));
+    bottom:calc(18px + env(safe-area-inset-bottom));
+    width:min(42vw,460px);
+    margin:0!important;
+  }
+  #reviewScreen #returnNote{
+    position:fixed;
+    right:calc(24px + env(safe-area-inset-right));
+    bottom:calc(68px + env(safe-area-inset-bottom));
+    width:min(42vw,460px);
+  }
+  #qr{width:220px;height:220px}
+  #qr img,#qr canvas{width:200px!important;height:200px!important}
+
+  #settingsScreen.active{justify-content:flex-start}
+  #settingsScreen .top{width:min(94vw,1000px)}
+  #settingsScreen .settings{
+    width:min(90vw,920px);
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    column-gap:26px;
+    padding:18px 24px;
+  }
+  #settingsScreen .row{min-height:66px}
+  #settingsScreen .small{margin-top:10px}
+
+  .network,.event-lock{top:calc(8px + env(safe-area-inset-top))}
+}
+
 </style>
 </head>
 <body>
@@ -87,7 +203,7 @@ select,input{background:#1b1b1b;color:#fff;border:1px solid #333;border-radius:9
     <div class="row"><label>Formato</label><select id="format"><option value="strip">Tira 2x6</option><option value="4x6">4x6</option></select></div>
     <div class="row"><label>Calidad digital</label><select id="quality"><option value=".72">Ligera</option><option value=".80" selected>Balanceada</option><option value=".88">Alta</option></select></div><div class="row"><label>PIN administrador</label><input id="adminPin" type="password" inputmode="numeric" maxlength="6" value="2468"></div><div class="row"><label>Regreso automático</label><select id="autoReturn"><option value="20">20 segundos</option><option value="30" selected>30 segundos</option><option value="45">45 segundos</option><option value="60">60 segundos</option></select></div><div class="row"><label>Modo evento</label><button id="toggleEventMode" class="btn secondary" type="button">ACTIVAR</button></div>
   </div>
-  <p class="small">AB Photobooth V3.5 Modo Evento</p>
+  <p class="small">AB Photobooth V3.6 iPad Landscape</p>
 </section>
 
 <div id="pinModal" class="pin-modal hidden"><div class="pin-card"><h2>Acceso administrador</h2><div class="small">Ingresa el PIN.</div><input id="pinEntry" type="password" inputmode="numeric" maxlength="6"><div id="pinError" class="small" style="color:#e8a0a0;min-height:18px"></div><div class="pin-actions"><button id="pinCancel" class="btn secondary">CANCELAR</button><button id="pinOk" class="btn primary">ENTRAR</button></div></div></div><canvas id="capture" class="hidden"></canvas>
