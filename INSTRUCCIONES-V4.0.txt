@@ -1,0 +1,13 @@
+AB PHOTOBOOTH V4.0 — CALIDAD REAL
+
+- Se eliminó la selección de calidad: el booth siempre prioriza máxima calidad.
+- JPEG exportado al 100%.
+- Se eliminaron límites conservadores de resolución donde podían reducir la captura.
+- Se conserva la resolución nativa que Safari/iPad entregue siempre que el flujo lo permita.
+- Canvas configurado con remuestreo de alta calidad.
+- No se añadió ningún modo Hotspot/Wi-Fi.
+- Conserva Español/English, Modo Evento, PIN, QR privado, cleanup y panel.
+- No requiere cambios en Supabase.
+
+Prueba recomendada:
+Toma una sesión nueva, descarga el archivo por QR y revisa el detalle del archivo descargado.
