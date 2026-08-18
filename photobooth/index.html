@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#080808">
-<title>AB Photobooth V3.6 iPad Landscape</title>
+<title>AB Photobooth V3.7 Cámara Normal</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 <style>
@@ -163,6 +163,9 @@ select,input{background:#1b1b1b;color:#fff;border:1px solid #333;border-radius:9
   .network,.event-lock{top:calc(8px + env(safe-area-inset-top))}
 }
 
+
+/* V3.7: encuadre normal para photobooth */
+.camera video{transform:scaleX(-1) scale(1.22)!important}
 </style>
 </head>
 <body>
@@ -203,7 +206,7 @@ select,input{background:#1b1b1b;color:#fff;border:1px solid #333;border-radius:9
     <div class="row"><label>Formato</label><select id="format"><option value="strip">Tira 2x6</option><option value="4x6">4x6</option></select></div>
     <div class="row"><label>Calidad digital</label><select id="quality"><option value=".72">Ligera</option><option value=".80" selected>Balanceada</option><option value=".88">Alta</option></select></div><div class="row"><label>PIN administrador</label><input id="adminPin" type="password" inputmode="numeric" maxlength="6" value="2468"></div><div class="row"><label>Regreso automático</label><select id="autoReturn"><option value="20">20 segundos</option><option value="30" selected>30 segundos</option><option value="45">45 segundos</option><option value="60">60 segundos</option></select></div><div class="row"><label>Modo evento</label><button id="toggleEventMode" class="btn secondary" type="button">ACTIVAR</button></div>
   </div>
-  <p class="small">AB Photobooth V3.6 iPad Landscape</p>
+  <p class="small">AB Photobooth V3.7 Cámara Normal</p>
 </section>
 
 <div id="pinModal" class="pin-modal hidden"><div class="pin-card"><h2>Acceso administrador</h2><div class="small">Ingresa el PIN.</div><input id="pinEntry" type="password" inputmode="numeric" maxlength="6"><div id="pinError" class="small" style="color:#e8a0a0;min-height:18px"></div><div class="pin-actions"><button id="pinCancel" class="btn secondary">CANCELAR</button><button id="pinOk" class="btn primary">ENTRAR</button></div></div></div><canvas id="capture" class="hidden"></canvas>
@@ -219,6 +222,14 @@ let stream=null,facing='user',photos=[],busy=false,currentBlob=null,currentPath=
 
 function show(id){screens.forEach(x=>x.classList.remove('active'));$(id).classList.add('active')}
 function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
+
+const NORMAL_CAMERA_ZOOM=1.22;
+function normalCameraRect(v){
+  const vw=v.videoWidth||1,vh=v.videoHeight||1;
+  const sw=vw/NORMAL_CAMERA_ZOOM,sh=vh/NORMAL_CAMERA_ZOOM;
+  return {sx:(vw-sw)/2,sy:(vh-sh)/2,sw,sh};
+}
+
 function network(){let n=$('net');if(navigator.onLine){n.textContent='● ONLINE';n.className='network online'}else{n.textContent='● OFFLINE';n.className='network offline'}}
 
 let eventMode=localStorage.getItem('ab_event_mode')==='1',returnTimer=null,returnTick=null,pendingAdminAction=null;

@@ -1,0 +1,5 @@
+AB PHOTOBOOTH V3.7 — CÁMARA NORMAL
+- Encuadre central 1.22x para reducir el aspecto ultra angular del iPad.
+- El mismo recorte se aplica a la vista previa y a la captura.
+- Conserva iPad landscape, Modo Evento, PIN, QR privado, panel y borrado a 3 días.
+- No requiere cambios en Supabase.
