@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#080808">
-<title>AB Photobooth V5.0 Estable</title>
+<title>AB Photobooth V5.1 Experiencia Final</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 <style>
@@ -197,7 +197,7 @@ select,input{background:#1b1b1b;color:#fff;border:1px solid #333;border-radius:9
     <div id="session" class="code"></div>
     <div id="statusText" class="small">Preparando tu foto…</div>
     <div class="progress"><div id="bar" class="bar"></div></div>
-    <div id="qrWrap" class="hidden"><div id="qr"></div><div class="small">Escanea para descargar en tu teléfono.</div></div>
+    <div id="qrWrap" class="hidden"><div id="finalQrHelper" class="small" style="margin:8px 0 12px;text-align:center">Escanea para guardar tu foto · Scan to save your photo</div><div id="qr"></div><div class="small">Escanea para guardar tu foto en tu teléfono.</div></div>
   </div>
   <div class="actions"><button id="retake" class="btn secondary"><span id="retakeText">REPETIR</span></button><button id="save" class="btn primary"><span id="saveText">GUARDAR</span></button></div>
   <button id="finish" class="btn secondary" style="margin-top:10px"><span id="finishText">FINALIZAR</span></button><div id="returnNote" class="return-note hidden"></div>
@@ -220,7 +220,7 @@ select,input{background:#1b1b1b;color:#fff;border:1px solid #333;border-radius:9
     <div class="row"><label>Formato</label><select id="format"><option value="strip">Tira 2x6</option><option value="4x6">4x6</option></select></div>
     <div class="row"><label id="languageLabel">Idioma</label><select id="language"><option value="es">Español</option><option value="en">English</option></select></div><div class="row"><label>PIN administrador</label><input id="adminPin" type="password" inputmode="numeric" maxlength="6" value="2468"></div><div class="row"><label>Regreso automático</label><select id="autoReturn"><option value="20">20 segundos</option><option value="30" selected>30 segundos</option><option value="45">45 segundos</option><option value="60">60 segundos</option></select></div><div class="row"><label>Modo evento</label><button id="toggleEventMode" class="btn secondary" type="button">ACTIVAR</button></div>
   </div>
-  <p class="small">AB Photobooth V5.0 Estable</p>
+  <p class="small">AB Photobooth V5.1 Experiencia Final</p>
 </section>
 
 <div id="pinModal" class="pin-modal hidden"><div class="pin-card"><h2>Acceso administrador</h2><div class="small">Ingresa el PIN.</div><input id="pinEntry" type="password" inputmode="numeric" maxlength="6"><div id="pinError" class="small" style="color:#e8a0a0;min-height:18px"></div><div class="pin-actions"><button id="pinCancel" class="btn secondary">CANCELAR</button><button id="pinOk" class="btn primary">ENTRAR</button></div></div></div><canvas id="capture" class="hidden"></canvas>
@@ -412,6 +412,28 @@ async function camera(){stop();stream=await navigator.mediaDevices.getUserMedia(
 async function begin(){photos=[];currentBlob=null;currentPath=null;show('cameraScreen');try{await camera()}catch(e){alert('Permite acceso a la cámara y abre el booth mediante HTTPS.');show('home')}}
 async function cd(){let sec=+$('timer').value;$('countdown').classList.remove('hidden');for(let i=sec;i;i--){$('countdown').textContent=i;await sleep(800)}$('countdown').classList.add('hidden')}
 function fx(){let f=$('flash');f.classList.remove('fire');void f.offsetWidth;f.classList.add('fire')}
+
+function hardResetBooth(){
+  try{
+    photos.length=0;
+    const v=$('video');
+    const st=v?.srcObject;
+    if(st?.getTracks) st.getTracks().forEach(t=>t.stop());
+    if(v) v.srcObject=null;
+    const c=$('capture');
+    if(c){
+      const cx=c.getContext('2d');
+      cx.clearRect(0,0,c.width,c.height);
+    }
+    const qr=$('qr');
+    if(qr) qr.innerHTML='';
+    const counter=$('counter');
+    if(counter) counter.textContent='';
+    const shot=$('shotCount');
+    if(shot) shot.textContent='0/4';
+  }catch(e){console.warn('reset',e)}
+}
+
 function snap(){
   const v=$('video');
   const c=$('capture');
@@ -523,6 +545,34 @@ updateCameraDiag();
 
 
 updateCameraDiag();
+
+
+['again','restart','newSession','homeBtn','doneBtn'].forEach(id=>{
+  const el=$(id);
+  if(el) el.addEventListener('click',()=>hardResetBooth());
+});
+
+
+let finalResetTimer=null;
+const finalObserver=new MutationObserver(()=>{
+  const candidates=['result','final','download','qrScreen'].map(id=>$(id)).filter(Boolean);
+  const visible=candidates.some(el=>!el.classList.contains('hidden') && getComputedStyle(el).display!=='none');
+  if(visible && !finalResetTimer){
+    finalResetTimer=setTimeout(()=>{
+      hardResetBooth();
+      const start=$('startScreen')||$('welcome')||$('home');
+      if(start){
+        document.querySelectorAll('.screen').forEach(x=>x.classList.add('hidden'));
+        start.classList.remove('hidden');
+      }
+      finalResetTimer=null;
+    },30000);
+  }else if(!visible && finalResetTimer){
+    clearTimeout(finalResetTimer);
+    finalResetTimer=null;
+  }
+});
+finalObserver.observe(document.body,{attributes:true,subtree:true,attributeFilter:['class','style']});
 
 if('serviceWorker'in navigator)addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
 </script>

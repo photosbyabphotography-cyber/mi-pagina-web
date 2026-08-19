@@ -1,0 +1,20 @@
+AB PHOTOBOOTH V5.1 — EXPERIENCIA FINAL
+
+Base: V5.0 estable. No se modifica cámara ni resolución.
+
+MEJORAS
+- Pantalla final con instrucción clara para guardar por QR.
+- Texto bilingüe: Español / English.
+- Limpieza de datos de la sesión al reiniciar.
+- Detiene correctamente el stream anterior antes del siguiente invitado.
+- Limpia QR, contador y canvas.
+- Reinicio automático de la pantalla final después de 30 segundos.
+- Conserva la composición 1800×5400 y la captura estable del iPad.
+- No requiere cambios en Supabase.
+
+PRUEBA RECOMENDADA
+1. Haz una sesión completa.
+2. Comprueba QR y descarga.
+3. No toques nada durante 30 segundos.
+4. Debe quedar listo para el siguiente invitado.
+5. Haz 5 sesiones consecutivas para verificar estabilidad.
