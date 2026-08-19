@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#080808">
-<title>AB Photobooth V4.6 ImageCapture Test</title>
+<title>AB Photobooth V4.7 ImageCapture Track Activo</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 <style>
@@ -220,7 +220,7 @@ select,input{background:#1b1b1b;color:#fff;border:1px solid #333;border-radius:9
     <div class="row"><label>Formato</label><select id="format"><option value="strip">Tira 2x6</option><option value="4x6">4x6</option></select></div>
     <div class="row"><label id="languageLabel">Idioma</label><select id="language"><option value="es">Español</option><option value="en">English</option></select></div><div class="row"><label>PIN administrador</label><input id="adminPin" type="password" inputmode="numeric" maxlength="6" value="2468"></div><div class="row"><label>Regreso automático</label><select id="autoReturn"><option value="20">20 segundos</option><option value="30" selected>30 segundos</option><option value="45">45 segundos</option><option value="60">60 segundos</option></select></div><div class="row"><label>Modo evento</label><button id="toggleEventMode" class="btn secondary" type="button">ACTIVAR</button></div>
   </div>
-  <p class="small">AB Photobooth V4.6 ImageCapture Test</p>
+  <p class="small">AB Photobooth V4.7 ImageCapture Track Activo</p>
 </section>
 
 <div id="pinModal" class="pin-modal hidden"><div class="pin-card"><h2>Acceso administrador</h2><div class="small">Ingresa el PIN.</div><input id="pinEntry" type="password" inputmode="numeric" maxlength="6"><div id="pinError" class="small" style="color:#e8a0a0;min-height:18px"></div><div class="pin-actions"><button id="pinCancel" class="btn secondary">CANCELAR</button><button id="pinOk" class="btn primary">ENTRAR</button></div></div></div><canvas id="capture" class="hidden"></canvas>
@@ -333,39 +333,49 @@ async function testImageCapturePhoto(){
     return;
   }
 
+  let tempStream=null;
   try{
-    const v=$('video');
-    const stream=v?.srcObject;
-    const track=stream?.getVideoTracks?.()[0];
-    if(!track){
-      lastImageCaptureError='No hay track de cámara activo';
-      updateCameraDiag();
-      return;
+    // Siempre abre un stream NUEVO y activo para la prueba.
+    tempStream=await navigator.mediaDevices.getUserMedia({
+      video:{
+        facingMode:{ideal:'user'},
+        width:{ideal:4032},
+        height:{ideal:3024}
+      },
+      audio:false
+    });
+
+    const track=tempStream.getVideoTracks()[0];
+    if(!track || track.readyState!=='live'){
+      throw new DOMException('El track no está activo','InvalidStateError');
     }
+
+    lastTrackSettings=track.getSettings?track.getSettings():null;
+    lastTrackCaps=track.getCapabilities?track.getCapabilities():null;
+    updateCameraDiag();
 
     const ic=new ImageCapture(track);
     let blob=null;
 
-    // Try photo capabilities first, then default takePhoto().
     try{
       const caps=await ic.getPhotoCapabilities?.();
-      if(caps?.imageWidth?.max && caps?.imageHeight?.max){
-        blob=await ic.takePhoto({
-          imageWidth:caps.imageWidth.max,
-          imageHeight:caps.imageHeight.max
-        });
-      }
-    }catch(e){}
-
-    if(!blob) blob=await ic.takePhoto();
+      const photoSettings={};
+      if(caps?.imageWidth?.max) photoSettings.imageWidth=caps.imageWidth.max;
+      if(caps?.imageHeight?.max) photoSettings.imageHeight=caps.imageHeight.max;
+      blob=Object.keys(photoSettings).length ? await ic.takePhoto(photoSettings) : await ic.takePhoto();
+    }catch(firstErr){
+      // Algunos navegadores fallan al pasar settings aunque sí aceptan takePhoto().
+      blob=await ic.takePhoto();
+    }
 
     const bmp=await createImageBitmap(blob);
     lastImageCaptureWidth=bmp.width;
     lastImageCaptureHeight=bmp.height;
     bmp.close?.();
-    updateCameraDiag();
   }catch(e){
     lastImageCaptureError=(e?.name?e.name+': ':'')+(e?.message||'No se pudo tomar foto');
+  }finally{
+    if(tempStream) tempStream.getTracks().forEach(t=>t.stop());
     updateCameraDiag();
   }
 }

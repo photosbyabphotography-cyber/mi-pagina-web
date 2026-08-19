@@ -1,0 +1,20 @@
+AB PHOTOBOOTH V4.7 — IMAGECAPTURE CON TRACK ACTIVO
+
+Corrección:
+La prueba anterior intentaba ImageCapture con un track ya detenido.
+
+Ahora al pulsar PROBAR FOTO NATIVA:
+1. Abre un stream de cámara NUEVO.
+2. Mantiene el track activo.
+3. Intenta ImageCapture.takePhoto().
+4. Mide la resolución real del blob capturado.
+5. Cierra el stream al terminar.
+
+Revisa en Diagnóstico:
+- Track real
+- Máximo reportado
+- ImageCapture disponible
+- Foto ImageCapture
+
+Si Foto ImageCapture supera 1920×1080, podremos usar esa vía.
+Si sigue igual o falla con track activo, el límite web queda prácticamente confirmado.
