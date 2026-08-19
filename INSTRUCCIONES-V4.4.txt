@@ -1,0 +1,20 @@
+AB PHOTOBOOTH V4.4 — DIAGNÓSTICO DE CÁMARA
+
+No cambia la calidad ni el diseño de la V4.3.
+
+Agrega en Configuración:
+- Resolución real del stream que Safari entrega.
+- Megapíxeles del stream.
+- Resolución de la captura individual.
+- Megapíxeles de la captura.
+- Resolución de la composición final.
+- Megapíxeles de la composición.
+
+PRUEBA
+1. Sube V4.4.
+2. Abre el Photobooth en el iPad.
+3. Haz una sesión completa.
+4. Entra a Configuración.
+5. Manda una foto de la sección "Diagnóstico de cámara".
+
+No requiere cambios en Supabase.
