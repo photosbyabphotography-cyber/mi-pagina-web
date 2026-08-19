@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#080808">
-<title>AB Photobooth V4.8 ImageCapture Real</title>
+<title>AB Photobooth V4.9 ImageCapture Integrado</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 <style>
@@ -220,7 +220,7 @@ select,input{background:#1b1b1b;color:#fff;border:1px solid #333;border-radius:9
     <div class="row"><label>Formato</label><select id="format"><option value="strip">Tira 2x6</option><option value="4x6">4x6</option></select></div>
     <div class="row"><label id="languageLabel">Idioma</label><select id="language"><option value="es">Español</option><option value="en">English</option></select></div><div class="row"><label>PIN administrador</label><input id="adminPin" type="password" inputmode="numeric" maxlength="6" value="2468"></div><div class="row"><label>Regreso automático</label><select id="autoReturn"><option value="20">20 segundos</option><option value="30" selected>30 segundos</option><option value="45">45 segundos</option><option value="60">60 segundos</option></select></div><div class="row"><label>Modo evento</label><button id="toggleEventMode" class="btn secondary" type="button">ACTIVAR</button></div>
   </div>
-  <p class="small">AB Photobooth V4.8 ImageCapture Real</p>
+  <p class="small">AB Photobooth V4.9 ImageCapture Integrado</p>
 </section>
 
 <div id="pinModal" class="pin-modal hidden"><div class="pin-card"><h2>Acceso administrador</h2><div class="small">Ingresa el PIN.</div><input id="pinEntry" type="password" inputmode="numeric" maxlength="6"><div id="pinError" class="small" style="color:#e8a0a0;min-height:18px"></div><div class="pin-actions"><button id="pinCancel" class="btn secondary">CANCELAR</button><button id="pinOk" class="btn primary">ENTRAR</button></div></div></div><canvas id="capture" class="hidden"></canvas>
@@ -414,14 +414,16 @@ async function cd(){let sec=+$('timer').value;$('countdown').classList.remove('h
 function fx(){let f=$('flash');f.classList.remove('fire');void f.offsetWidth;f.classList.add('fire')}
 async function snap(){
   const v=$('video');
+  const c=$('capture');
   const activeStream=v?.srcObject;
   const track=activeStream?.getVideoTracks?.()[0];
 
-  // Prefer a real still-photo capture when Safari/iPadOS exposes ImageCapture.
+  // 1) Intentar foto fija de mayor resolución usando EL MISMO track del preview.
   if(track && track.readyState==='live' && 'ImageCapture' in window){
     try{
       const ic=new ImageCapture(track);
       let blob=null;
+
       try{
         const caps=await ic.getPhotoCapabilities?.();
         const opts={};
@@ -434,47 +436,58 @@ async function snap(){
 
       if(blob){
         const bmp=await createImageBitmap(blob);
+
         lastCaptureWidth=bmp.width;
         lastCaptureHeight=bmp.height;
 
-        // Normalize orientation into a JPEG data URL for the existing composition pipeline.
-        const c=$('capture'), ctx=c.getContext('2d');
         c.width=bmp.width;
         c.height=bmp.height;
-        ctx.clearRect(0,0,c.width,c.height);
+        const x=c.getContext('2d');
+        x.clearRect(0,0,c.width,c.height);
 
-        // Front camera should remain mirrored like the preview.
+        // Mantener la misma sensación espejada que la vista previa frontal.
         if(facing==='user'){
-          ctx.save();
-          ctx.translate(c.width,0);
-          ctx.scale(-1,1);
-          ctx.drawImage(bmp,0,0,c.width,c.height);
-          ctx.restore();
+          x.save();
+          x.translate(c.width,0);
+          x.scale(-1,1);
+          x.drawImage(bmp,0,0,c.width,c.height);
+          x.restore();
         }else{
-          ctx.drawImage(bmp,0,0,c.width,c.height);
+          x.drawImage(bmp,0,0,c.width,c.height);
         }
+
         bmp.close?.();
         updateCameraDiag();
         return c.toDataURL('image/jpeg',1.0);
       }
     }catch(e){
-      console.warn('ImageCapture fallback:',e);
+      console.warn('ImageCapture no disponible en esta toma; usando frame de video.',e);
     }
   }
 
-  // Fallback: capture the live video frame.
-  let c=$('capture'),vw=v.videoWidth,vh=v.videoHeight,scale=1;
-  c.width=vw;c.height=vh;
-  lastCaptureWidth=c.width;lastCaptureHeight=c.height;updateCameraDiag();
-  let x=c.getContext('2d');
+  // 2) Respaldo seguro: frame del preview actual.
+  const vw=v.videoWidth, vh=v.videoHeight;
+  if(!vw || !vh) throw new Error('Video no listo');
+
+  c.width=vw;
+  c.height=vh;
+  lastCaptureWidth=c.width;
+  lastCaptureHeight=c.height;
+  updateCameraDiag();
+
+  const x=c.getContext('2d');
   x.clearRect(0,0,c.width,c.height);
+
   if(facing==='user'){
-    x.save();x.translate(c.width,0);x.scale(-1,1);
+    x.save();
+    x.translate(c.width,0);
+    x.scale(-1,1);
     x.drawImage(v,0,0,vw,vh,0,0,c.width,c.height);
     x.restore();
   }else{
     x.drawImage(v,0,0,vw,vh,0,0,c.width,c.height);
   }
+
   return c.toDataURL('image/jpeg',1.0);
 }
 function load(src){return new Promise(r=>{let i=new Image;i.onload=()=>r(i);i.src=src})}

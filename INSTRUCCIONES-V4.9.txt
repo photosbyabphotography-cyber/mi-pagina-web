@@ -1,0 +1,24 @@
+AB PHOTOBOOTH V4.9 — IMAGECAPTURE INTEGRADO
+
+CORRECCIÓN
+La V4.8 interfería con el arranque normal de la cámara.
+
+Esta versión vuelve a tomar como base la V4.7 que sí abría correctamente el preview.
+
+Ahora:
+- La cámara abre exactamente como antes.
+- NO se crea un segundo stream para tomar las fotos.
+- En el disparo se usa ImageCapture sobre el MISMO track activo del preview.
+- Si ImageCapture funciona, usa la foto fija de mayor resolución.
+- Si falla, usa automáticamente el frame de video sin detener la sesión.
+- El mismo track sigue vivo para las 4 fotos.
+- Conserva QR, Supabase, idiomas, PIN, modo evento y cleanup.
+
+PRUEBA
+1. Sube V4.9.
+2. Verifica primero que la cámara abra.
+3. Haz una sesión completa.
+4. Ve a Configuración > Diagnóstico.
+5. Revisa Captura individual.
+   - Si aparece cerca de 2052×2736 / 2736×2052, ImageCapture ya está integrado.
+   - Si aparece 1920×1080, entró el fallback.
