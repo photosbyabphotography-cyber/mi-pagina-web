@@ -1,0 +1,15 @@
+AB PHOTOBOOTH V4.1 — RESOLUCIÓN FINAL
+
+Objetivo de esta versión:
+- La composición final pasa de 600 × 1800 (~1 MP) a 1800 × 5400 (~9.7 MP).
+- Mantiene exactamente la proporción 1:3 y el mismo diseño visual.
+- JPEG permanece en máxima calidad.
+- No cambia el encuadre de cámara.
+- No cambia Supabase, QR, idiomas, PIN ni cleanup.
+
+PRUEBA:
+1. Sube esta versión.
+2. Haz una sesión completamente nueva.
+3. Descarga la composición por QR.
+4. En Fotos > Información debe indicar aproximadamente 1800 × 5400 (~10 MP).
+5. Haz zoom y compara el detalle con la versión anterior.
