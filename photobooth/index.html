@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#080808">
-<title>AB Photobooth V4.1 Resolución 10MP</title>
+<title>AB Photobooth V4.3 Máxima Calidad Digital</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 <style>
@@ -212,7 +212,7 @@ select,input{background:#1b1b1b;color:#fff;border:1px solid #333;border-radius:9
     <div class="row"><label>Formato</label><select id="format"><option value="strip">Tira 2x6</option><option value="4x6">4x6</option></select></div>
     <div class="row"><label id="languageLabel">Idioma</label><select id="language"><option value="es">Español</option><option value="en">English</option></select></div><div class="row"><label>PIN administrador</label><input id="adminPin" type="password" inputmode="numeric" maxlength="6" value="2468"></div><div class="row"><label>Regreso automático</label><select id="autoReturn"><option value="20">20 segundos</option><option value="30" selected>30 segundos</option><option value="45">45 segundos</option><option value="60">60 segundos</option></select></div><div class="row"><label>Modo evento</label><button id="toggleEventMode" class="btn secondary" type="button">ACTIVAR</button></div>
   </div>
-  <p class="small">AB Photobooth V4.1 Resolución 10MP</p>
+  <p class="small">AB Photobooth V4.3 Máxima Calidad Digital</p>
 </section>
 
 <div id="pinModal" class="pin-modal hidden"><div class="pin-card"><h2>Acceso administrador</h2><div class="small">Ingresa el PIN.</div><input id="pinEntry" type="password" inputmode="numeric" maxlength="6"><div id="pinError" class="small" style="color:#e8a0a0;min-height:18px"></div><div class="pin-actions"><button id="pinCancel" class="btn secondary">CANCELAR</button><button id="pinOk" class="btn primary">ENTRAR</button></div></div></div><canvas id="capture" class="hidden"></canvas>
@@ -295,17 +295,17 @@ async function camera(){stop();stream=await navigator.mediaDevices.getUserMedia(
 async function begin(){photos=[];currentBlob=null;currentPath=null;show('cameraScreen');try{await camera()}catch(e){alert('Permite acceso a la cámara y abre el booth mediante HTTPS.');show('home')}}
 async function cd(){let sec=+$('timer').value;$('countdown').classList.remove('hidden');for(let i=sec;i;i--){$('countdown').textContent=i;await sleep(800)}$('countdown').classList.add('hidden')}
 function fx(){let f=$('flash');f.classList.remove('fire');void f.offsetWidth;f.classList.add('fire')}
-function snap(){let v=$('video'),c=$('capture'),vw=v.videoWidth,vh=v.videoHeight,scale=Math.min(1,1600/Math.max(vw,vh));c.width=Math.round(vw*scale);c.height=Math.round(vh*scale);let x=c.getContext('2d');if(facing==='user'){x.save();x.translate(c.width,0);x.scale(-1,1);x.drawImage(v,0,0,vw,vh,0,0,c.width,c.height);x.restore()}else{x.drawImage(v,0,0,vw,vh,0,0,c.width,c.height)}return c.toDataURL('image/jpeg',1.0)}
+function snap(){let v=$('video'),c=$('capture'),vw=v.videoWidth,vh=v.videoHeight,scale=1;c.width=vw;c.height=vh;let x=c.getContext('2d');if(facing==='user'){x.save();x.translate(c.width,0);x.scale(-1,1);x.drawImage(v,0,0,vw,vh,0,0,c.width,c.height);x.restore()}else{x.drawImage(v,0,0,vw,vh,0,0,c.width,c.height)}return c.toDataURL('image/jpeg',1.0)}
 function load(src){return new Promise(r=>{let i=new Image;i.onload=()=>r(i);i.src=src})}
 function slug(s){return (s||'evento').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,48)||'evento'}
 function id(){return (crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random().toString(16).slice(2))}
 
 async function layout(){
-  let c=$('strip'),x=c.getContext('2d'),mode=$('format').value,W=600,H=mode==='strip'?1800:900;
+  let c=$('strip'),x=c.getContext('2d'),mode=$('format').value,W=mode==='strip'?1800:2400,H=mode==='strip'?5400:3600;
   c.width=W;c.height=H;x.fillStyle='#f4ede3';x.fillRect(0,0,W,H);
-  let m=38,top=105,bottom=75,gap=14,count=photos.length,cols=mode==='4x6'?2:1,rows=Math.ceil(count/cols),pw=(W-m*2-gap*(cols-1))/cols,ph=(H-top-bottom-gap*(rows-1))/rows;
+  let m=114,top=315,bottom=225,gap=42,count=photos.length,cols=mode==='4x6'?2:1,rows=Math.ceil(count/cols),pw=(W-m*2-gap*(cols-1))/cols,ph=(H-top-bottom-gap*(rows-1))/rows;
   for(let i=0;i<count;i++){let im=await load(photos[i]),col=i%cols,row=Math.floor(i/cols),dx=m+col*(pw+gap),dy=top+row*(ph+gap),ir=im.width/im.height,tr=pw/ph,dw=pw,dh=ph,ox=0,oy=0;if(ir>tr){dh=pw/ir;oy=(ph-dh)/2}else{dw=ph*ir;ox=(pw-dw)/2}x.drawImage(im,dx+ox,dy+oy,dw,dh)}
-  x.fillStyle='#34291d';x.textAlign='center';x.font='italic 46px Georgia';x.fillText('AB',W/2,54);x.font='14px sans-serif';x.fillText($('eventName').value||'AB PHOTOGRAPHY',W/2,82);x.fillStyle='#8d6b3f';x.fillText('CAPTURA · SONRÍE · REPITE',W/2,H-34)
+  x.fillStyle='#34291d';x.textAlign='center';x.font='italic 138px Georgia';x.fillText('AB',W/2,162);x.font='42px sans-serif';x.fillText($('eventName').value||'AB PHOTOGRAPHY',W/2,246);x.fillStyle='#8d6b3f';x.fillText('CAPTURA · SONRÍE · REPITE',W/2,H-102)
 }
 
 async function optimizedBlob(){
