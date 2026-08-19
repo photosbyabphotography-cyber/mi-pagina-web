@@ -1,0 +1,18 @@
+AB PHOTOBOOTH V4.6 — PRUEBA IMAGECAPTURE
+
+Objetivo:
+Comprobar si iPadOS/Safari permite una foto fija de mayor resolución que el stream 1920×1080.
+
+Pasos:
+1. Sube esta versión.
+2. Abre el Photobooth y entra a la cámara.
+3. Vuelve a Configuración.
+4. En Diagnóstico de cámara pulsa "PROBAR FOTO NATIVA".
+5. Revisa:
+   - ImageCapture disponible: Sí / No
+   - Foto ImageCapture: XXXX × XXXX
+
+Si da una resolución mayor a 1920×1080, podremos usar esa vía para las fotos reales.
+Si no está soportado o sigue en 1920×1080, la web llegó a su límite práctico.
+
+No requiere cambios en Supabase.

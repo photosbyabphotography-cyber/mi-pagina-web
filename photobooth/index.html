@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#080808">
-<title>AB Photobooth V4.5 Prueba Máxima Resolución</title>
+<title>AB Photobooth V4.6 ImageCapture Test</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 <style>
@@ -210,6 +210,7 @@ select,input{background:#1b1b1b;color:#fff;border:1px solid #333;border-radius:9
   <div id="cameraDiag" class="small" style="margin-top:8px;line-height:1.7;text-align:left">
     Abre la cámara y toma una sesión para medir la resolución real.
   </div>
+  <button id="testImageCapture" class="btn secondary" type="button" style="margin-top:10px">PROBAR FOTO NATIVA</button>
 </div>
 <button id="settingsBack" class="icon">←</button><div>CONFIGURACIÓN</div><div></div></div>
   <div class="settings">
@@ -219,7 +220,7 @@ select,input{background:#1b1b1b;color:#fff;border:1px solid #333;border-radius:9
     <div class="row"><label>Formato</label><select id="format"><option value="strip">Tira 2x6</option><option value="4x6">4x6</option></select></div>
     <div class="row"><label id="languageLabel">Idioma</label><select id="language"><option value="es">Español</option><option value="en">English</option></select></div><div class="row"><label>PIN administrador</label><input id="adminPin" type="password" inputmode="numeric" maxlength="6" value="2468"></div><div class="row"><label>Regreso automático</label><select id="autoReturn"><option value="20">20 segundos</option><option value="30" selected>30 segundos</option><option value="45">45 segundos</option><option value="60">60 segundos</option></select></div><div class="row"><label>Modo evento</label><button id="toggleEventMode" class="btn secondary" type="button">ACTIVAR</button></div>
   </div>
-  <p class="small">AB Photobooth V4.5 Prueba Máxima Resolución</p>
+  <p class="small">AB Photobooth V4.6 ImageCapture Test</p>
 </section>
 
 <div id="pinModal" class="pin-modal hidden"><div class="pin-card"><h2>Acceso administrador</h2><div class="small">Ingresa el PIN.</div><input id="pinEntry" type="password" inputmode="numeric" maxlength="6"><div id="pinError" class="small" style="color:#e8a0a0;min-height:18px"></div><div class="pin-actions"><button id="pinCancel" class="btn secondary">CANCELAR</button><button id="pinOk" class="btn primary">ENTRAR</button></div></div></div><canvas id="capture" class="hidden"></canvas>
@@ -271,7 +272,7 @@ network();addEventListener('online',network);addEventListener('offline',network)
 function stop(){if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}}
 
 
-let lastCaptureWidth=0,lastCaptureHeight=0,lastFinalWidth=0,lastFinalHeight=0,lastTrackSettings=null,lastTrackCaps=null;
+let lastCaptureWidth=0,lastCaptureHeight=0,lastFinalWidth=0,lastFinalHeight=0,lastTrackSettings=null,lastTrackCaps=null,lastImageCaptureAvailable=false,lastImageCaptureWidth=0,lastImageCaptureHeight=0,lastImageCaptureError='';
 function mpText(w,h){return w&&h?((w*h)/1000000).toFixed(2)+' MP':'—'}
 function updateCameraDiag(){
   const v=$('video');
@@ -282,6 +283,8 @@ function updateCameraDiag(){
     `Stream de Safari: <b>${sw&&sh?sw+' × '+sh:'Aún no disponible'}</b> ${sw&&sh?'('+mpText(sw,sh)+')':''}<br>`+
     `Track real: <b>${lastTrackSettings?.width&&lastTrackSettings?.height?lastTrackSettings.width+' × '+lastTrackSettings.height:'Aún no disponible'}</b> ${lastTrackSettings?.width&&lastTrackSettings?.height?'('+mpText(lastTrackSettings.width,lastTrackSettings.height)+')':''}<br>`+
     `Máximo reportado: <b>${lastTrackCaps?.width?.max&&lastTrackCaps?.height?.max?lastTrackCaps.width.max+' × '+lastTrackCaps.height.max:'No expuesto por Safari'}</b><br>`+
+    `ImageCapture disponible: <b>${lastImageCaptureAvailable?'Sí':'No'}</b><br>`+
+    `Foto ImageCapture: <b>${lastImageCaptureWidth&&lastImageCaptureHeight?lastImageCaptureWidth+' × '+lastImageCaptureHeight:(lastImageCaptureError||'Aún no probada')}</b> ${lastImageCaptureWidth&&lastImageCaptureHeight?'('+mpText(lastImageCaptureWidth,lastImageCaptureHeight)+')':''}<br>`+
     `Captura individual: <b>${lastCaptureWidth&&lastCaptureHeight?lastCaptureWidth+' × '+lastCaptureHeight:'Aún no disponible'}</b> ${lastCaptureWidth&&lastCaptureHeight?'('+mpText(lastCaptureWidth,lastCaptureHeight)+')':''}<br>`+
     `Composición final: <b>${lastFinalWidth&&lastFinalHeight?lastFinalWidth+' × '+lastFinalHeight:'Aún no disponible'}</b> ${lastFinalWidth&&lastFinalHeight?'('+mpText(lastFinalWidth,lastFinalHeight)+')':''}`;
 }
@@ -314,6 +317,57 @@ async function pushTrackToMaximum(stream){
     updateCameraDiag();
   }catch(e){}
   return stream;
+}
+
+
+async function testImageCapturePhoto(){
+  lastImageCaptureAvailable = 'ImageCapture' in window;
+  lastImageCaptureWidth=0;
+  lastImageCaptureHeight=0;
+  lastImageCaptureError='';
+  updateCameraDiag();
+
+  if(!lastImageCaptureAvailable){
+    lastImageCaptureError='No soportado por este navegador';
+    updateCameraDiag();
+    return;
+  }
+
+  try{
+    const v=$('video');
+    const stream=v?.srcObject;
+    const track=stream?.getVideoTracks?.()[0];
+    if(!track){
+      lastImageCaptureError='No hay track de cámara activo';
+      updateCameraDiag();
+      return;
+    }
+
+    const ic=new ImageCapture(track);
+    let blob=null;
+
+    // Try photo capabilities first, then default takePhoto().
+    try{
+      const caps=await ic.getPhotoCapabilities?.();
+      if(caps?.imageWidth?.max && caps?.imageHeight?.max){
+        blob=await ic.takePhoto({
+          imageWidth:caps.imageWidth.max,
+          imageHeight:caps.imageHeight.max
+        });
+      }
+    }catch(e){}
+
+    if(!blob) blob=await ic.takePhoto();
+
+    const bmp=await createImageBitmap(blob);
+    lastImageCaptureWidth=bmp.width;
+    lastImageCaptureHeight=bmp.height;
+    bmp.close?.();
+    updateCameraDiag();
+  }catch(e){
+    lastImageCaptureError=(e?.name?e.name+': ':'')+(e?.message||'No se pudo tomar foto');
+    updateCameraDiag();
+  }
 }
 
 async function getBestFrontCameraStream(){
@@ -426,6 +480,17 @@ applyLanguage(localStorage.getItem('ab_booth_language')||'es');
 
 $('video').addEventListener('loadedmetadata',updateCameraDiag);
 $('settingsBtn').addEventListener('click',()=>setTimeout(updateCameraDiag,100));
+updateCameraDiag();
+
+
+$('testImageCapture').addEventListener('click', async ()=>{
+  $('testImageCapture').disabled=true;
+  $('testImageCapture').textContent='PROBANDO…';
+  await testImageCapturePhoto();
+  $('testImageCapture').disabled=false;
+  $('testImageCapture').textContent='PROBAR FOTO NATIVA';
+});
+lastImageCaptureAvailable='ImageCapture' in window;
 updateCameraDiag();
 
 if('serviceWorker'in navigator)addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
