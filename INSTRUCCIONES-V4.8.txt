@@ -1,0 +1,27 @@
+AB PHOTOBOOTH V4.8 — IMAGECAPTURE REAL
+
+CAMBIO PRINCIPAL
+Las fotos reales de cada sesión ahora intentan usar ImageCapture.takePhoto()
+en lugar de capturar un frame del video.
+
+En el iPad probado:
+- Frame de video anterior: 1920 × 1080 (~2.07 MP)
+- ImageCapture: 2052 × 2736 / 2736 × 2052 (~5.61 MP)
+
+FLUJO
+Preview -> cuenta regresiva -> ImageCapture -> composición -> Supabase -> QR
+
+Si ImageCapture falla durante una toma, el booth usa automáticamente el frame
+del video como respaldo para no detener el evento.
+
+Se conserva:
+- Máxima calidad digital
+- Tira 1800 × 5400
+- 4x6 2400 × 3600
+- Español / English
+- Modo Evento + PIN
+- QR privado
+- Expiración y cleanup a 3 días
+- Panel de fotógrafo
+
+No requiere cambios en Supabase.

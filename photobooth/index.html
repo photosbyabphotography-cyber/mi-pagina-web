@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#080808">
-<title>AB Photobooth V4.7 ImageCapture Track Activo</title>
+<title>AB Photobooth V4.8 ImageCapture Real</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 <style>
@@ -220,7 +220,7 @@ select,input{background:#1b1b1b;color:#fff;border:1px solid #333;border-radius:9
     <div class="row"><label>Formato</label><select id="format"><option value="strip">Tira 2x6</option><option value="4x6">4x6</option></select></div>
     <div class="row"><label id="languageLabel">Idioma</label><select id="language"><option value="es">Español</option><option value="en">English</option></select></div><div class="row"><label>PIN administrador</label><input id="adminPin" type="password" inputmode="numeric" maxlength="6" value="2468"></div><div class="row"><label>Regreso automático</label><select id="autoReturn"><option value="20">20 segundos</option><option value="30" selected>30 segundos</option><option value="45">45 segundos</option><option value="60">60 segundos</option></select></div><div class="row"><label>Modo evento</label><button id="toggleEventMode" class="btn secondary" type="button">ACTIVAR</button></div>
   </div>
-  <p class="small">AB Photobooth V4.7 ImageCapture Track Activo</p>
+  <p class="small">AB Photobooth V4.8 ImageCapture Real</p>
 </section>
 
 <div id="pinModal" class="pin-modal hidden"><div class="pin-card"><h2>Acceso administrador</h2><div class="small">Ingresa el PIN.</div><input id="pinEntry" type="password" inputmode="numeric" maxlength="6"><div id="pinError" class="small" style="color:#e8a0a0;min-height:18px"></div><div class="pin-actions"><button id="pinCancel" class="btn secondary">CANCELAR</button><button id="pinOk" class="btn primary">ENTRAR</button></div></div></div><canvas id="capture" class="hidden"></canvas>
@@ -412,7 +412,71 @@ async function camera(){stop();stream=await navigator.mediaDevices.getUserMedia(
 async function begin(){photos=[];currentBlob=null;currentPath=null;show('cameraScreen');try{await camera()}catch(e){alert('Permite acceso a la cámara y abre el booth mediante HTTPS.');show('home')}}
 async function cd(){let sec=+$('timer').value;$('countdown').classList.remove('hidden');for(let i=sec;i;i--){$('countdown').textContent=i;await sleep(800)}$('countdown').classList.add('hidden')}
 function fx(){let f=$('flash');f.classList.remove('fire');void f.offsetWidth;f.classList.add('fire')}
-function snap(){let v=$('video'),c=$('capture'),vw=v.videoWidth,vh=v.videoHeight,scale=1;c.width=vw;c.height=vh;lastCaptureWidth=c.width;lastCaptureHeight=c.height;updateCameraDiag();let x=c.getContext('2d');if(facing==='user'){x.save();x.translate(c.width,0);x.scale(-1,1);x.drawImage(v,0,0,vw,vh,0,0,c.width,c.height);x.restore()}else{x.drawImage(v,0,0,vw,vh,0,0,c.width,c.height)}return c.toDataURL('image/jpeg',1.0)}
+async function snap(){
+  const v=$('video');
+  const activeStream=v?.srcObject;
+  const track=activeStream?.getVideoTracks?.()[0];
+
+  // Prefer a real still-photo capture when Safari/iPadOS exposes ImageCapture.
+  if(track && track.readyState==='live' && 'ImageCapture' in window){
+    try{
+      const ic=new ImageCapture(track);
+      let blob=null;
+      try{
+        const caps=await ic.getPhotoCapabilities?.();
+        const opts={};
+        if(caps?.imageWidth?.max) opts.imageWidth=caps.imageWidth.max;
+        if(caps?.imageHeight?.max) opts.imageHeight=caps.imageHeight.max;
+        blob=Object.keys(opts).length ? await ic.takePhoto(opts) : await ic.takePhoto();
+      }catch(e){
+        blob=await ic.takePhoto();
+      }
+
+      if(blob){
+        const bmp=await createImageBitmap(blob);
+        lastCaptureWidth=bmp.width;
+        lastCaptureHeight=bmp.height;
+
+        // Normalize orientation into a JPEG data URL for the existing composition pipeline.
+        const c=$('capture'), ctx=c.getContext('2d');
+        c.width=bmp.width;
+        c.height=bmp.height;
+        ctx.clearRect(0,0,c.width,c.height);
+
+        // Front camera should remain mirrored like the preview.
+        if(facing==='user'){
+          ctx.save();
+          ctx.translate(c.width,0);
+          ctx.scale(-1,1);
+          ctx.drawImage(bmp,0,0,c.width,c.height);
+          ctx.restore();
+        }else{
+          ctx.drawImage(bmp,0,0,c.width,c.height);
+        }
+        bmp.close?.();
+        updateCameraDiag();
+        return c.toDataURL('image/jpeg',1.0);
+      }
+    }catch(e){
+      console.warn('ImageCapture fallback:',e);
+    }
+  }
+
+  // Fallback: capture the live video frame.
+  let c=$('capture'),vw=v.videoWidth,vh=v.videoHeight,scale=1;
+  c.width=vw;c.height=vh;
+  lastCaptureWidth=c.width;lastCaptureHeight=c.height;updateCameraDiag();
+  let x=c.getContext('2d');
+  x.clearRect(0,0,c.width,c.height);
+  if(facing==='user'){
+    x.save();x.translate(c.width,0);x.scale(-1,1);
+    x.drawImage(v,0,0,vw,vh,0,0,c.width,c.height);
+    x.restore();
+  }else{
+    x.drawImage(v,0,0,vw,vh,0,0,c.width,c.height);
+  }
+  return c.toDataURL('image/jpeg',1.0);
+}
 function load(src){return new Promise(r=>{let i=new Image;i.onload=()=>r(i);i.src=src})}
 function slug(s){return (s||'evento').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,48)||'evento'}
 function id(){return (crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random().toString(16).slice(2))}
@@ -452,7 +516,7 @@ async function uploadAndQR(){
 async function shoot(){
   if(busy)return;busy=true;photos=[];$('qrWrap').classList.add('hidden');setProgress(0);
   let total=+$('photoCount').value;
-  for(let i=0;i<total;i++){$('shotLabel').textContent=`${i+1} / ${total}`;await cd();photos.push(snap());fx();await sleep(650)}
+  for(let i=0;i<total;i++){$('shotLabel').textContent=`${i+1} / ${total}`;await cd();photos.push(await snap());fx();await sleep(650)}
   await layout();stop();$('session').textContent='SESIÓN '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
   show('reviewScreen');await uploadAndQR();startAutoReturn();busy=false
 }
