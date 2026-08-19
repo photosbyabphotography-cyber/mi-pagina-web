@@ -1,0 +1,22 @@
+AB PHOTOBOOTH V5.0 — ESTABLE
+
+Esta versión elimina ImageCapture del flujo normal porque en el iPad bloqueaba/interfería
+con la cámara al usar el booth.
+
+SE CONSERVA:
+- Cámara estable usando el stream web de Safari.
+- Captura individual 1920×1080 (~2.07 MP) en el iPad probado.
+- JPEG 100%.
+- Tira 1800×5400 (~9.7 MP).
+- 4x6 digital 2400×3600 (~8.6 MP).
+- Español / English.
+- iPad landscape.
+- Modo Evento + PIN.
+- QR privado.
+- Supabase privado.
+- Expiración y cleanup a 3 días.
+- Panel del fotógrafo.
+
+DECISIÓN:
+ImageCapture sí logró 5.61 MP como prueba aislada, pero no fue suficientemente estable
+para un photobooth de evento. Se prioriza que la cámara nunca se bloquee.
