@@ -1,0 +1,16 @@
+AB PHOTOBOOTH V4.5 — PRUEBA MÁXIMA RESOLUCIÓN
+
+Esta versión intenta llevar el track de cámara al máximo que Safari exponga.
+
+Diagnóstico agrega:
+- Stream de Safari
+- Track real
+- Máximo reportado por Safari
+- Captura individual
+- Composición final
+
+Si Safari reporta un máximo superior a 1920×1080, el booth intenta aplicarlo.
+Si Safari no expone un máximo o mantiene 1920×1080, ese será el límite práctico de esta cámara vía navegador en este iPad.
+
+La composición sigue en máxima calidad digital.
+No requiere cambios en Supabase.

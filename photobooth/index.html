@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#080808">
-<title>AB Photobooth V4.4 Diagnóstico Cámara</title>
+<title>AB Photobooth V4.5 Prueba Máxima Resolución</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 <style>
@@ -219,7 +219,7 @@ select,input{background:#1b1b1b;color:#fff;border:1px solid #333;border-radius:9
     <div class="row"><label>Formato</label><select id="format"><option value="strip">Tira 2x6</option><option value="4x6">4x6</option></select></div>
     <div class="row"><label id="languageLabel">Idioma</label><select id="language"><option value="es">Español</option><option value="en">English</option></select></div><div class="row"><label>PIN administrador</label><input id="adminPin" type="password" inputmode="numeric" maxlength="6" value="2468"></div><div class="row"><label>Regreso automático</label><select id="autoReturn"><option value="20">20 segundos</option><option value="30" selected>30 segundos</option><option value="45">45 segundos</option><option value="60">60 segundos</option></select></div><div class="row"><label>Modo evento</label><button id="toggleEventMode" class="btn secondary" type="button">ACTIVAR</button></div>
   </div>
-  <p class="small">AB Photobooth V4.4 Diagnóstico Cámara</p>
+  <p class="small">AB Photobooth V4.5 Prueba Máxima Resolución</p>
 </section>
 
 <div id="pinModal" class="pin-modal hidden"><div class="pin-card"><h2>Acceso administrador</h2><div class="small">Ingresa el PIN.</div><input id="pinEntry" type="password" inputmode="numeric" maxlength="6"><div id="pinError" class="small" style="color:#e8a0a0;min-height:18px"></div><div class="pin-actions"><button id="pinCancel" class="btn secondary">CANCELAR</button><button id="pinOk" class="btn primary">ENTRAR</button></div></div></div><canvas id="capture" class="hidden"></canvas>
@@ -271,7 +271,7 @@ network();addEventListener('online',network);addEventListener('offline',network)
 function stop(){if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}}
 
 
-let lastCaptureWidth=0,lastCaptureHeight=0,lastFinalWidth=0,lastFinalHeight=0;
+let lastCaptureWidth=0,lastCaptureHeight=0,lastFinalWidth=0,lastFinalHeight=0,lastTrackSettings=null,lastTrackCaps=null;
 function mpText(w,h){return w&&h?((w*h)/1000000).toFixed(2)+' MP':'—'}
 function updateCameraDiag(){
   const v=$('video');
@@ -280,8 +280,40 @@ function updateCameraDiag(){
   if(!el)return;
   el.innerHTML=
     `Stream de Safari: <b>${sw&&sh?sw+' × '+sh:'Aún no disponible'}</b> ${sw&&sh?'('+mpText(sw,sh)+')':''}<br>`+
+    `Track real: <b>${lastTrackSettings?.width&&lastTrackSettings?.height?lastTrackSettings.width+' × '+lastTrackSettings.height:'Aún no disponible'}</b> ${lastTrackSettings?.width&&lastTrackSettings?.height?'('+mpText(lastTrackSettings.width,lastTrackSettings.height)+')':''}<br>`+
+    `Máximo reportado: <b>${lastTrackCaps?.width?.max&&lastTrackCaps?.height?.max?lastTrackCaps.width.max+' × '+lastTrackCaps.height.max:'No expuesto por Safari'}</b><br>`+
     `Captura individual: <b>${lastCaptureWidth&&lastCaptureHeight?lastCaptureWidth+' × '+lastCaptureHeight:'Aún no disponible'}</b> ${lastCaptureWidth&&lastCaptureHeight?'('+mpText(lastCaptureWidth,lastCaptureHeight)+')':''}<br>`+
     `Composición final: <b>${lastFinalWidth&&lastFinalHeight?lastFinalWidth+' × '+lastFinalHeight:'Aún no disponible'}</b> ${lastFinalWidth&&lastFinalHeight?'('+mpText(lastFinalWidth,lastFinalHeight)+')':''}`;
+}
+
+
+async function pushTrackToMaximum(stream){
+  try{
+    const track=stream.getVideoTracks()[0];
+    if(!track)return stream;
+    const caps=track.getCapabilities?track.getCapabilities():{};
+    lastTrackCaps=caps||{};
+    const maxW=caps?.width?.max, maxH=caps?.height?.max;
+    if(maxW&&maxH){
+      try{
+        await track.applyConstraints({
+          width:{ideal:maxW},
+          height:{ideal:maxH}
+        });
+      }catch(e){}
+    }else{
+      // Last useful web attempt: ask above 1080p. Safari may ignore this and stay at 1080p.
+      try{
+        await track.applyConstraints({
+          width:{ideal:3840},
+          height:{ideal:2160}
+        });
+      }catch(e){}
+    }
+    lastTrackSettings=track.getSettings?track.getSettings():null;
+    updateCameraDiag();
+  }catch(e){}
+  return stream;
 }
 
 async function getBestFrontCameraStream(){
@@ -297,19 +329,19 @@ async function getBestFrontCameraStream(){
     if(normal?.deviceId){
       probe.getTracks().forEach(t=>t.stop());
       probe=null;
-      return await navigator.mediaDevices.getUserMedia({
+      return await pushTrackToMaximum(await navigator.mediaDevices.getUserMedia({
         video:{deviceId:{exact:normal.deviceId},width:{ideal:3840},height:{ideal:2160}},
         audio:false
-      });
+      }));
     }
-    if(probe) return probe;
+    if(probe) return await pushTrackToMaximum(probe);
   }catch(e){
     if(probe) probe.getTracks().forEach(t=>t.stop());
   }
-  return navigator.mediaDevices.getUserMedia({
+  return pushTrackToMaximum(await navigator.mediaDevices.getUserMedia({
     video:{facingMode:{ideal:'user'},width:{ideal:3840},height:{ideal:2160}},
     audio:false
-  });
+  }));
 }
 
 async function camera(){stop();stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:facing},width:{ideal:1920},height:{ideal:1080}},audio:false});$('video').srcObject=stream;$('video').classList.toggle('mirror',facing==='user');await $('video').play()}
