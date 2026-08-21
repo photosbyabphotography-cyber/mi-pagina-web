@@ -1,0 +1,32 @@
+AB PHOTOBOOTH V5.2 — EVENTOS PERSONALIZADOS
+
+ANTES DE SUBIR:
+1. Supabase > SQL Editor.
+2. Ejecuta PHOTOBOOTH-EVENTOS-SETUP.sql.
+3. Debe decir Success.
+
+DESPUÉS:
+1. Sube esta versión al repositorio y Push.
+2. Entra al Panel del Fotógrafo > Photobooth.
+3. En "Diseño del evento" crea un evento:
+   - Nombre
+   - Fecha
+   - Texto inferior
+   - Disponible en el iPad
+4. Guarda.
+5. En el iPad abre Configuración del Photobooth y selecciona el evento.
+
+EL PHOTOBOOTH CARGA AUTOMÁTICAMENTE:
+- Nombre del evento
+- Fecha
+- Texto inferior
+- Slug usado para organizar las fotos en Supabase
+
+NO SE CAMBIA:
+- Cámara estable
+- Resolución 1800×5400
+- QR privado
+- Borrado automático a 3 días
+- Modo Evento + PIN
+- Español / English
+- Reinicio automático

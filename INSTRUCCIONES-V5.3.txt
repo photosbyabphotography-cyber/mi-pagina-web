@@ -1,0 +1,13 @@
+AB PHOTOBOOTH V5.3 — CONTADOR VISIBLE
+
+Cambio:
+- La pantalla final ahora muestra claramente:
+  "Nueva sesión en 30 s"
+  o
+  "New session in 30 s"
+- El número baja segundo por segundo.
+- Usa el idioma seleccionado en el Photobooth.
+- Mantiene el reinicio automático ya existente.
+- No cambia cámara, resolución, QR, Supabase ni eventos personalizados.
+
+No requiere SQL nuevo.

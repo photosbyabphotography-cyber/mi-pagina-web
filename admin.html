@@ -56,6 +56,23 @@ nav a.active{font-weight:700}
 @media(max-width:700px){.pb-summary{grid-template-columns:1fr}.pb-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 
 @media(max-width:800px){.portal{grid-template-columns:1fr}.grid{grid-template-columns:1fr}.status{grid-template-columns:1fr 1fr}}
+
+.pb-designer{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:18px}
+.pb-designer-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.pb-designer-grid label{display:grid;gap:6px;font-size:12px;color:var(--muted)}
+.pb-designer-grid input,.pb-designer-grid textarea{width:100%;padding:11px;border:1px solid var(--line);border-radius:8px;font:inherit;color:var(--ink);background:#fff}
+.pb-designer-grid textarea{min-height:80px;resize:vertical}
+.pb-designer-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.pb-preview{margin-top:16px;background:#f4ede3;border:1px solid #ddcfbf;border-radius:12px;padding:24px;text-align:center;color:#34291d}
+.pb-preview .ab{font:italic 46px Georgia,serif}
+.pb-preview .event{font:500 16px Georgia,serif;margin-top:8px}
+.pb-preview .date{font-size:12px;letter-spacing:2px;margin-top:6px;color:#7c644b}
+.pb-preview .footer{font-size:11px;letter-spacing:1.5px;margin-top:34px;color:#8d6b3f}
+.pb-configured{display:grid;gap:8px;margin-top:14px}
+.pb-config-row{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;padding:10px 12px;border:1px solid #eee;border-radius:9px;background:#faf9f8}
+.pb-config-row small{color:var(--muted)}
+@media(max-width:700px){.pb-designer-grid{grid-template-columns:1fr}.pb-config-row{grid-template-columns:1fr auto}}
+
 </style>
 </head>
 <body>
@@ -153,6 +170,45 @@ nav a.active{font-weight:700}
         <div class="note">Eventos y fotografías activas. Las fotos expiran y se eliminan automáticamente después de 3 días.</div>
       </div>
       <button id="refreshPhotobooth" class="secondary">Actualizar</button>
+    </div>
+
+
+    <div class="pb-designer">
+      <h2 style="margin-top:0">Diseño del evento</h2>
+      <div class="note">Prepara aquí lo que aparecerá en la composición del Photobooth. El iPad cargará estos datos automáticamente.</div>
+
+      <input id="pbConfigId" type="hidden">
+      <div class="pb-designer-grid" style="margin-top:14px">
+        <label>Nombre del evento
+          <input id="pbConfigName" maxlength="80" placeholder="Ej. Andrea & Carlos">
+        </label>
+        <label>Fecha
+          <input id="pbConfigDate" type="date">
+        </label>
+        <label style="grid-column:1/-1">Texto inferior
+          <input id="pbConfigFooter" maxlength="100" value="CAPTURA · SONRÍE · REPITE" placeholder="CAPTURA · SONRÍE · REPITE">
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;color:var(--ink)">
+          <input id="pbConfigActive" type="checkbox" checked style="width:auto"> Disponible en el iPad
+        </label>
+      </div>
+
+      <div class="pb-designer-actions">
+        <button id="pbSaveConfig" type="button">Guardar diseño</button>
+        <button id="pbNewConfig" type="button" class="secondary">Nuevo</button>
+      </div>
+      <div id="pbConfigMsg" class="msg"></div>
+
+      <div class="pb-preview">
+        <div class="ab">AB</div>
+        <div id="pbPreviewName" class="event">NOMBRE DEL EVENTO</div>
+        <div id="pbPreviewDate" class="date">FECHA</div>
+        <div style="height:100px;margin:18px auto;border:1px solid #d4c5b5;background:#fff;max-width:330px;display:grid;place-items:center;color:#b7a99c;font-size:11px">VISTA DE LAS FOTOS</div>
+        <div id="pbPreviewFooter" class="footer">CAPTURA · SONRÍE · REPITE</div>
+      </div>
+
+      <h3 style="margin-bottom:8px">Eventos configurados</h3>
+      <div id="pbConfiguredEvents" class="pb-configured"><div class="note">Cargando...</div></div>
     </div>
 
     <div class="pb-summary">
@@ -255,6 +311,7 @@ function showPhotoboothView() {
   document.querySelectorAll('nav a').forEach(a=>a.classList.remove('active'));
   photoboothLink.classList.add('active');
   loadPhotobooth();
+  loadPbConfiguredEvents();
 }
 
 photoboothLink.addEventListener('click', (e) => {
@@ -262,7 +319,7 @@ photoboothLink.addEventListener('click', (e) => {
   showPhotoboothView();
 });
 
-document.getElementById('refreshPhotobooth').addEventListener('click', loadPhotobooth);
+document.getElementById('refreshPhotobooth').addEventListener('click', async()=>{await loadPhotobooth();await loadPbConfiguredEvents();});
 
 function niceEventName(slug) {
   return (slug || 'evento')
@@ -281,6 +338,115 @@ function remainingText(expiresAt) {
   if (days > 0) return `${days} d ${remHours} h`;
   return `${Math.max(1,hours)} h`;
 }
+
+
+let pbConfiguredRows=[];
+
+function pbSlug(value=''){
+  return String(value).normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,60) || 'evento';
+}
+function pbFormatDate(value){
+  if(!value) return 'FECHA';
+  const [y,m,d]=value.split('-');
+  return `${m}.${d}.${y}`;
+}
+function updatePbPreview(){
+  document.getElementById('pbPreviewName').textContent =
+    document.getElementById('pbConfigName').value.trim() || 'NOMBRE DEL EVENTO';
+  document.getElementById('pbPreviewDate').textContent =
+    pbFormatDate(document.getElementById('pbConfigDate').value);
+  document.getElementById('pbPreviewFooter').textContent =
+    document.getElementById('pbConfigFooter').value.trim() || 'CAPTURA · SONRÍE · REPITE';
+}
+['pbConfigName','pbConfigDate','pbConfigFooter'].forEach(id=>{
+  document.getElementById(id)?.addEventListener('input',updatePbPreview);
+});
+
+function resetPbConfigForm(){
+  document.getElementById('pbConfigId').value='';
+  document.getElementById('pbConfigName').value='';
+  document.getElementById('pbConfigDate').value='';
+  document.getElementById('pbConfigFooter').value='CAPTURA · SONRÍE · REPITE';
+  document.getElementById('pbConfigActive').checked=true;
+  document.getElementById('pbConfigMsg').textContent='';
+  updatePbPreview();
+}
+document.getElementById('pbNewConfig')?.addEventListener('click',resetPbConfigForm);
+
+async function loadPbConfiguredEvents(){
+  const wrap=document.getElementById('pbConfiguredEvents');
+  const {data,error}=await sbClient.from('photobooth_events')
+    .select('id,event_slug,display_name,event_date,footer_text,active,created_at')
+    .order('event_date',{ascending:false});
+  if(error){
+    wrap.innerHTML='<div class="note">No se pudieron cargar los diseños: '+escapeHtml(error.message)+'</div>';
+    return;
+  }
+  pbConfiguredRows=data||[];
+  if(!pbConfiguredRows.length){
+    wrap.innerHTML='<div class="note">Todavía no hay eventos configurados.</div>';
+    return;
+  }
+  wrap.innerHTML='';
+  pbConfiguredRows.forEach(row=>{
+    const el=document.createElement('div');
+    el.className='pb-config-row';
+    el.innerHTML=`
+      <div><b>${escapeHtml(row.display_name)}</b><br><small>${escapeHtml(row.event_slug)} · ${row.event_date||'sin fecha'} · ${row.active?'Activo':'Oculto'}</small></div>
+      <button type="button" class="secondary" data-edit="${escapeAttr(row.id)}">Editar</button>
+      <button type="button" class="danger" data-delete="${escapeAttr(row.id)}">Borrar</button>`;
+    wrap.appendChild(el);
+  });
+  wrap.querySelectorAll('[data-edit]').forEach(btn=>btn.addEventListener('click',()=>{
+    const row=pbConfiguredRows.find(r=>r.id===btn.dataset.edit);
+    if(!row)return;
+    document.getElementById('pbConfigId').value=row.id;
+    document.getElementById('pbConfigName').value=row.display_name||'';
+    document.getElementById('pbConfigDate').value=row.event_date||'';
+    document.getElementById('pbConfigFooter').value=row.footer_text||'CAPTURA · SONRÍE · REPITE';
+    document.getElementById('pbConfigActive').checked=!!row.active;
+    updatePbPreview();
+    document.getElementById('pbConfigName').scrollIntoView({behavior:'smooth',block:'center'});
+  }));
+  wrap.querySelectorAll('[data-delete]').forEach(btn=>btn.addEventListener('click',async()=>{
+    const row=pbConfiguredRows.find(r=>r.id===btn.dataset.delete);
+    if(!row || !confirm(`¿Borrar el diseño de "${row.display_name}"? Las fotos ya tomadas no se borrarán.`))return;
+    const {error}=await sbClient.from('photobooth_events').delete().eq('id',row.id);
+    if(error) alert('No se pudo borrar: '+error.message);
+    else await loadPbConfiguredEvents();
+  }));
+}
+
+document.getElementById('pbSaveConfig')?.addEventListener('click',async()=>{
+  const msg=document.getElementById('pbConfigMsg');
+  const id=document.getElementById('pbConfigId').value;
+  const name=document.getElementById('pbConfigName').value.trim();
+  const date=document.getElementById('pbConfigDate').value||null;
+  const footer=document.getElementById('pbConfigFooter').value.trim()||'CAPTURA · SONRÍE · REPITE';
+  const active=document.getElementById('pbConfigActive').checked;
+  if(!name){
+    msg.className='msg err';msg.textContent='Escribe el nombre del evento.';return;
+  }
+  const payload={
+    display_name:name,
+    event_slug:pbSlug(name+(date?'-'+date:'')),
+    event_date:date,
+    footer_text:footer,
+    active
+  };
+  let result;
+  if(id) result=await sbClient.from('photobooth_events').update(payload).eq('id',id);
+  else result=await sbClient.from('photobooth_events').insert(payload);
+  if(result.error){
+    msg.className='msg err';msg.textContent='No se pudo guardar: '+result.error.message;return;
+  }
+  msg.className='msg ok';msg.textContent='Diseño guardado.';
+  resetPbConfigForm();
+  msg.className='msg ok';msg.textContent='Diseño guardado.';
+  await loadPbConfiguredEvents();
+});
+
 
 async function loadPhotobooth() {
   const wrap = document.getElementById('pbEvents');
