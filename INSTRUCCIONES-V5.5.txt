@@ -1,0 +1,9 @@
+AB PHOTOBOOTH V5.5 — FOTOS MÁS GRANDES
+
+- Las fotos ahora llenan completamente cada recuadro (cover).
+- Se recortan ligeramente los extremos necesarios, en vez de dejar espacio crema.
+- Menos separación entre fotos.
+- Márgenes superior e inferior más compactos.
+- Logo y nombre del evento suben ligeramente.
+- Resolución final permanece 1800×5400.
+- No cambia cámara, QR, Supabase, PIN, idiomas ni reinicio automático.
