@@ -1,0 +1,22 @@
+AB PHOTOBOOTH V5.4 — REINICIO 30 SEGUNDOS CORREGIDO
+
+CORRECCIÓN:
+- Al aparecer la pantalla final, inicia un contador real de 30 segundos.
+- El contador se muestra en pantalla.
+- Al llegar a 0:
+  * limpia la sesión local,
+  * limpia el QR de la pantalla,
+  * regresa a Toca para comenzar,
+  * queda listo para el siguiente invitado.
+- NO borra la fotografía de Supabase.
+- La fotografía conserva su expiración normal.
+
+No cambia:
+- cámara,
+- resolución 1800×5400,
+- QR,
+- eventos personalizados,
+- PIN,
+- idiomas.
+
+No requiere SQL nuevo.
