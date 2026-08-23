@@ -1,0 +1,5 @@
+HALO PHOTOBOOTH V5.6 — LOGO HALO
+
+- Logo HALO agregado a la pantalla principal.
+- Adaptado para iPad horizontal.
+- Cámara, resolución 1800x5400, composición, QR, Supabase y reinicio permanecen igual que V5.5.

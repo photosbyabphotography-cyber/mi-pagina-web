@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#080808">
-<title>AB Photobooth V5.5 Fotos Más Grandes</title>
+<title>HALO Photobooth V5.6</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 <style>
@@ -172,14 +172,17 @@ select,input{background:#1b1b1b;color:#fff;border:1px solid #333;border-radius:9
  #cameraScreen > .small{right:18px;bottom:calc(28px + env(safe-area-inset-bottom));width:170px;text-align:center;line-height:1.45}
 }
 
+
+.halo-brand-logo{display:block;width:min(420px,72vw);max-height:310px;object-fit:contain;margin:0 auto 18px}
+@media (orientation:landscape){.halo-brand-logo{width:min(360px,30vw);max-height:260px;margin-bottom:12px}}
+
 </style>
 </head>
 <body>
 <button id="eventLock" class="event-lock">🔓 ADMIN</button><div id="net" class="network">RED</div>
 
 <section id="home" class="screen active">
-  <div class="logo">AB</div><div class="brand">PHOTOGRAPHY</div>
-  <h1>PHOTOBOOTH</h1><p class="gold"><span id="captureMoment">CAPTURA EL MOMENTO</span></p><p class="muted"><span id="enjoyText">DISFRUTA · SONRÍE · REPITE</span></p>
+  <img class="halo-brand-logo" src="assets/halo-photobooth-logo.png" alt="HALO Photobooth Experience by AB Photography"><p class="gold"><span id="captureMoment">CAPTURA EL MOMENTO</span></p><p class="muted"><span id="enjoyText">DISFRUTA · SONRÍE · REPITE</span></p>
   <button id="start" class="btn primary big">📷<br><span id="startText">TOCAR PARA COMENZAR</span></button>
   <button id="settingsBtn" class="btn secondary" style="margin-top:14px"><span id="settingsText">CONFIGURACIÓN</span></button>
 </section>
@@ -220,7 +223,7 @@ select,input{background:#1b1b1b;color:#fff;border:1px solid #333;border-radius:9
     <div class="row"><label>Formato</label><select id="format"><option value="strip">Tira 2x6</option><option value="4x6">4x6</option></select></div>
     <div class="row"><label id="languageLabel">Idioma</label><select id="language"><option value="es">Español</option><option value="en">English</option></select></div><div class="row"><label>PIN administrador</label><input id="adminPin" type="password" inputmode="numeric" maxlength="6" value="2468"></div><div class="row"><label>Regreso automático</label><select id="autoReturn"><option value="20">20 segundos</option><option value="30" selected>30 segundos</option><option value="45">45 segundos</option><option value="60">60 segundos</option></select></div><div class="row"><label>Modo evento</label><button id="toggleEventMode" class="btn secondary" type="button">ACTIVAR</button></div>
   </div>
-  <p class="small">AB Photobooth V5.5 Fotos Más Grandes</p>
+  <p class="small">HALO Photobooth V5.6</p>
 </section>
 
 <div id="pinModal" class="pin-modal hidden"><div class="pin-card"><h2>Acceso administrador</h2><div class="small">Ingresa el PIN.</div><input id="pinEntry" type="password" inputmode="numeric" maxlength="6"><div id="pinError" class="small" style="color:#e8a0a0;min-height:18px"></div><div class="pin-actions"><button id="pinCancel" class="btn secondary">CANCELAR</button><button id="pinOk" class="btn primary">ENTRAR</button></div></div></div><canvas id="capture" class="hidden"></canvas>
