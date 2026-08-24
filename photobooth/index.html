@@ -220,7 +220,7 @@ select,input{background:#1b1b1b;color:#fff;border:1px solid #333;border-radius:9
     <div class="row"><label>Evento</label><select id="eventName"><option value="Evento AB" data-slug="evento-ab" data-footer="CAPTURA · SONRÍE · REPITE">Evento AB</option></select></div>
     <div class="row"><label>Fotos</label><select id="photoCount"><option>1</option><option>2</option><option>3</option><option selected>4</option></select></div>
     <div class="row"><label>Temporizador</label><select id="timer"><option value="3">3 segundos</option><option value="5">5 segundos</option></select></div>
-    <div class="row"><label>Formato</label><select id="format"><option value="strip">Tira 2x6</option><option value="4x6">4x6</option></select></div><div class="row"><label>Plantilla</label><select id="templateStyle"><option value="classic">Classic</option><option value="minimal">Minimal</option><option value="dark">Dark</option><option value="wedding-floral">Wedding Floral</option></select></div><div id="weddingFields" style="display:none">
+    <div class="row"><label>Formato</label><select id="format"><option value="strip">Tira 2x6</option><option value="4x6">4x6</option></select></div><div class="row"><label>Plantilla</label><select id="templateStyle"><option value="classic">Classic</option><option value="minimal">Minimal</option><option value="dark">Dark</option><option value="wedding-elegant">Wedding Elegant</option></select></div><div id="weddingFields" style="display:none">
 <div class="row"><label>Nombre 1</label><input id="weddingName1" placeholder="Andrea"></div>
 <div class="row"><label>Nombre 2</label><input id="weddingName2" placeholder="Carlos"></div>
 <div class="row"><label>Fecha de boda</label><input id="weddingDate" type="date"></div>
@@ -570,16 +570,14 @@ async function loadEventConfigs(){
 }
 
 
-function floralCorner(ctx,x,y,scale=1,flip=1){
+function botanicalCorner(ctx,x,y,scale=1,flip=1){
   ctx.save();ctx.translate(x,y);ctx.scale(flip*scale,scale);
-  ctx.strokeStyle='#88775f';ctx.lineWidth=5;ctx.lineCap='round';
-  ctx.beginPath();ctx.moveTo(0,0);ctx.bezierCurveTo(45,30,75,95,105,165);ctx.stroke();
-  [[30,32,-.7],[58,70,.6],[82,112,-.55],[100,150,.55]].forEach(([px,py,a])=>{
-    ctx.save();ctx.translate(px,py);ctx.rotate(a);
-    ctx.beginPath();ctx.ellipse(0,0,28,10,0,0,Math.PI*2);ctx.stroke();ctx.restore();
+  ctx.strokeStyle='#8d8579';ctx.lineWidth=3.2;ctx.lineCap='round';ctx.lineJoin='round';
+  ctx.beginPath();ctx.moveTo(0,0);ctx.bezierCurveTo(38,28,58,78,72,145);ctx.stroke();
+  [[20,24,-.75],[39,55,.65],[55,89,-.62],[66,124,.55]].forEach(([px,py,a])=>{
+    ctx.save();ctx.translate(px,py);ctx.rotate(a);ctx.beginPath();
+    ctx.moveTo(0,0);ctx.bezierCurveTo(14,-9,30,-8,40,0);ctx.bezierCurveTo(28,10,13,10,0,0);ctx.stroke();ctx.restore();
   });
-  ctx.beginPath();ctx.arc(112,178,18,0,Math.PI*2);ctx.stroke();
-  for(let i=0;i<5;i++){ctx.save();ctx.translate(112,178);ctx.rotate(i*Math.PI*2/5);ctx.beginPath();ctx.ellipse(0,-27,12,25,0,0,Math.PI*2);ctx.stroke();ctx.restore();}
   ctx.restore();
 }
 function prettyWeddingDate(v){
@@ -592,14 +590,15 @@ function slug(s){return (s||'evento').normalize('NFD').replace(/[\u0300-\u036f]/
 function id(){return (crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random().toString(16).slice(2))}
 
 async function layout(){
-  if(($('templateStyle')?.value||'')==='wedding-floral' && $('format').value==='strip'){
+  if(($('templateStyle')?.value||'')==='wedding-elegant' && $('format').value==='strip'){
     let c=$('strip'),x=c.getContext('2d'),W=1800,H=5400;
     lastFinalWidth=W;lastFinalHeight=H;updateCameraDiag();c.width=W;c.height=H;
-    x.fillStyle='#fffdf9';x.fillRect(0,0,W,H);
+    x.fillStyle='#fffdfa';x.fillRect(0,0,W,H);
 
-    const margin=105, top=130, photoGap=28, photoW=W-margin*2, photoH=1180;
+    // Three generous photographs, closely stacked like a premium wedding strip.
+    const margin=78, top=82, gap=20, photoW=W-margin*2, photoH=1210;
     for(let i=0;i<Math.min(3,photos.length);i++){
-      let im=await load(photos[i]), dx=margin,dy=top+i*(photoH+photoGap);
+      let im=await load(photos[i]),dx=margin,dy=top+i*(photoH+gap);
       let ir=im.width/im.height,tr=photoW/photoH,sx=0,sy=0,sw=im.width,sh=im.height;
       if(ir>tr){sw=im.height*tr;sx=(im.width-sw)/2}else{sh=im.width/tr;sy=(im.height-sh)/2}
       x.drawImage(im,sx,sy,sw,sh,dx,dy,photoW,photoH);
@@ -608,17 +607,36 @@ async function layout(){
     const n1=($('weddingName1')?.value||'NAME').trim();
     const n2=($('weddingName2')?.value||'NAME').trim();
     const dt=prettyWeddingDate($('weddingDate')?.value||'');
-    const baseY=top+3*(photoH+photoGap)+130;
+    const y=top+3*(photoH+gap)+90;
 
-    floralCorner(x,115,baseY+90,1.35,1);
-    floralCorner(x,W-115,baseY+720,1.35,-1);
+    // Fine botanical accents kept away from the names.
+    botanicalCorner(x,92,y+110,1.55,1);
+    botanicalCorner(x,W-92,y+650,1.55,-1);
 
-    x.textAlign='center';x.fillStyle='#24201c';
-    x.font='italic 116px Georgia';x.fillText(n1,W/2,baseY+190);
-    x.font='30px Georgia';x.letterSpacing='8px';x.fillText('AND',W/2,baseY+260);
-    x.font='italic 116px Georgia';x.fillText(n2,W/2,baseY+375);
-    x.font='32px sans-serif';x.fillStyle='#6d604f';x.fillText(dt,W/2,baseY+485);
-    x.font='24px sans-serif';x.fillStyle='#9a8a74';x.fillText('HALO · BY AB PHOTOGRAPHY',W/2,H-80);
+    x.textAlign='center';
+    x.fillStyle='#25211d';
+    x.font='italic 128px Georgia';
+    x.fillText(n1,W/2,y+175);
+
+    x.fillStyle='#7c746b';
+    x.font='26px Georgia';
+    x.fillText('A N D',W/2,y+245);
+
+    x.fillStyle='#25211d';
+    x.font='italic 128px Georgia';
+    x.fillText(n2,W/2,y+365);
+
+    if(dt){
+      x.fillStyle='#625b54';
+      x.font='30px sans-serif';
+      x.fillText(dt,W/2,y+455);
+    }
+
+    // Delicate separator and discreet HALO signature.
+    x.strokeStyle='#c8c0b6';x.lineWidth=2;
+    x.beginPath();x.moveTo(W/2-115,y+505);x.lineTo(W/2+115,y+505);x.stroke();
+    x.fillStyle='#948b80';x.font='20px sans-serif';
+    x.fillText('HALO  ·  PHOTOBOOTH EXPERIENCE',W/2,H-58);
     return;
   }
 
@@ -726,7 +744,7 @@ loadEventConfigs();
 
 
 function updateWeddingFields(){
-  const w=$('weddingFields'), active=$('templateStyle')?.value==='wedding-floral';
+  const w=$('weddingFields'), active=$('templateStyle')?.value==='wedding-elegant';
   if(w)w.style.display=active?'block':'none';
 }
 ['weddingName1','weddingName2','weddingDate'].forEach(id=>{
