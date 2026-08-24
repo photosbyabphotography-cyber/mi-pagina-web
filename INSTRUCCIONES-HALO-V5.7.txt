@@ -1,0 +1,8 @@
+HALO V5.7 — PLANTILLAS
+
+Classic: crema/elegante.
+Minimal: blanco/limpio.
+Dark: oscuro/elegante.
+
+Selecciona Configuración > Plantilla. La elección queda guardada en el iPad.
+No se modificaron cámara, resolución, QR, Supabase ni reinicio automático.

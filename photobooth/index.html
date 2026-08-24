@@ -220,7 +220,7 @@ select,input{background:#1b1b1b;color:#fff;border:1px solid #333;border-radius:9
     <div class="row"><label>Evento</label><select id="eventName"><option value="Evento AB" data-slug="evento-ab" data-footer="CAPTURA · SONRÍE · REPITE">Evento AB</option></select></div>
     <div class="row"><label>Fotos</label><select id="photoCount"><option>1</option><option>2</option><option>3</option><option selected>4</option></select></div>
     <div class="row"><label>Temporizador</label><select id="timer"><option value="3">3 segundos</option><option value="5">5 segundos</option></select></div>
-    <div class="row"><label>Formato</label><select id="format"><option value="strip">Tira 2x6</option><option value="4x6">4x6</option></select></div>
+    <div class="row"><label>Formato</label><select id="format"><option value="strip">Tira 2x6</option><option value="4x6">4x6</option></select></div><div class="row"><label>Plantilla</label><select id="templateStyle"><option value="classic">Classic</option><option value="minimal">Minimal</option><option value="dark">Dark</option></select></div>
     <div class="row"><label id="languageLabel">Idioma</label><select id="language"><option value="es">Español</option><option value="en">English</option></select></div><div class="row"><label>PIN administrador</label><input id="adminPin" type="password" inputmode="numeric" maxlength="6" value="2468"></div><div class="row"><label>Regreso automático</label><select id="autoReturn"><option value="20">20 segundos</option><option value="30" selected>30 segundos</option><option value="45">45 segundos</option><option value="60">60 segundos</option></select></div><div class="row"><label>Modo evento</label><button id="toggleEventMode" class="btn secondary" type="button">ACTIVAR</button></div>
   </div>
   <p class="small">HALO Photobooth V5.6</p>
@@ -570,8 +570,11 @@ function slug(s){return (s||'evento').normalize('NFD').replace(/[\u0300-\u036f]/
 function id(){return (crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random().toString(16).slice(2))}
 
 async function layout(){
+  const tpl=$('templateStyle')?.value||'classic';
+  const theme=tpl==='dark'?{bg:'#151515',ink:'#f3eee7',accent:'#c9aa7a'}:tpl==='minimal'?{bg:'#ffffff',ink:'#1d1d1d',accent:'#777777'}:{bg:'#f4ede3',ink:'#34291d',accent:'#8d6b3f'};
+
   let c=$('strip'),x=c.getContext('2d'),mode=$('format').value,W=mode==='strip'?1800:2400,H=mode==='strip'?5400:3600;lastFinalWidth=W;lastFinalHeight=H;updateCameraDiag();
-  c.width=W;c.height=H;x.fillStyle='#f4ede3';x.fillRect(0,0,W,H);
+  c.width=W;c.height=H;x.fillStyle=theme.bg;x.fillRect(0,0,W,H);
   let m=90,top=260,bottom=170,gap=24,count=photos.length,cols=mode==='4x6'?2:1,rows=Math.ceil(count/cols),pw=(W-m*2-gap*(cols-1))/cols,ph=(H-top-bottom-gap*(rows-1))/rows;
   for(let i=0;i<count;i++){
     let im=await load(photos[i]),col=i%cols,row=Math.floor(i/cols),dx=m+col*(pw+gap),dy=top+row*(ph+gap);
@@ -580,10 +583,10 @@ async function layout(){
     x.drawImage(im,sx,sy,sw,sh,dx,dy,pw,ph);
   }
   const ev=selectedEventConfig();
-  x.fillStyle='#34291d';x.textAlign='center';x.font='italic 138px Georgia';x.fillText('AB',W/2,138);
+  x.fillStyle=theme.ink;x.textAlign='center';x.font='italic 138px Georgia';x.fillText('AB',W/2,138);
   x.font='42px sans-serif';x.fillText(ev.name||'AB PHOTOGRAPHY',W/2,210);
   if(ev.date){x.font='30px sans-serif';x.fillStyle='#7c644b';x.fillText(formatEventDate(ev.date),W/2,246);}
-  x.fillStyle='#8d6b3f';x.font='36px sans-serif';x.fillText(ev.footer||'CAPTURA · SONRÍE · REPITE',W/2,H-72)
+  x.fillStyle=theme.accent;x.font='36px sans-serif';x.fillText(ev.footer||'CAPTURA · SONRÍE · REPITE',W/2,H-72)
 }
 
 async function optimizedBlob(){
@@ -671,6 +674,9 @@ $('eventName')?.addEventListener('change',()=>{
 });
 loadEventConfigs();
 
+
+const tplSelect=$('templateStyle');
+if(tplSelect){tplSelect.value=localStorage.getItem('ab_template_style')||'classic';tplSelect.addEventListener('change',()=>localStorage.setItem('ab_template_style',tplSelect.value));}
 if('serviceWorker'in navigator)addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
 </script>
 </body>
