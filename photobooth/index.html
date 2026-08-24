@@ -220,7 +220,11 @@ select,input{background:#1b1b1b;color:#fff;border:1px solid #333;border-radius:9
     <div class="row"><label>Evento</label><select id="eventName"><option value="Evento AB" data-slug="evento-ab" data-footer="CAPTURA · SONRÍE · REPITE">Evento AB</option></select></div>
     <div class="row"><label>Fotos</label><select id="photoCount"><option>1</option><option>2</option><option>3</option><option selected>4</option></select></div>
     <div class="row"><label>Temporizador</label><select id="timer"><option value="3">3 segundos</option><option value="5">5 segundos</option></select></div>
-    <div class="row"><label>Formato</label><select id="format"><option value="strip">Tira 2x6</option><option value="4x6">4x6</option></select></div><div class="row"><label>Plantilla</label><select id="templateStyle"><option value="classic">Classic</option><option value="minimal">Minimal</option><option value="dark">Dark</option></select></div>
+    <div class="row"><label>Formato</label><select id="format"><option value="strip">Tira 2x6</option><option value="4x6">4x6</option></select></div><div class="row"><label>Plantilla</label><select id="templateStyle"><option value="classic">Classic</option><option value="minimal">Minimal</option><option value="dark">Dark</option><option value="wedding-floral">Wedding Floral</option></select></div><div id="weddingFields" style="display:none">
+<div class="row"><label>Nombre 1</label><input id="weddingName1" placeholder="Andrea"></div>
+<div class="row"><label>Nombre 2</label><input id="weddingName2" placeholder="Carlos"></div>
+<div class="row"><label>Fecha de boda</label><input id="weddingDate" type="date"></div>
+</div>
     <div class="row"><label id="languageLabel">Idioma</label><select id="language"><option value="es">Español</option><option value="en">English</option></select></div><div class="row"><label>PIN administrador</label><input id="adminPin" type="password" inputmode="numeric" maxlength="6" value="2468"></div><div class="row"><label>Regreso automático</label><select id="autoReturn"><option value="20">20 segundos</option><option value="30" selected>30 segundos</option><option value="45">45 segundos</option><option value="60">60 segundos</option></select></div><div class="row"><label>Modo evento</label><button id="toggleEventMode" class="btn secondary" type="button">ACTIVAR</button></div>
   </div>
   <p class="small">HALO Photobooth V5.6</p>
@@ -565,16 +569,61 @@ async function loadEventConfigs(){
   }
 }
 
+
+function floralCorner(ctx,x,y,scale=1,flip=1){
+  ctx.save();ctx.translate(x,y);ctx.scale(flip*scale,scale);
+  ctx.strokeStyle='#88775f';ctx.lineWidth=5;ctx.lineCap='round';
+  ctx.beginPath();ctx.moveTo(0,0);ctx.bezierCurveTo(45,30,75,95,105,165);ctx.stroke();
+  [[30,32,-.7],[58,70,.6],[82,112,-.55],[100,150,.55]].forEach(([px,py,a])=>{
+    ctx.save();ctx.translate(px,py);ctx.rotate(a);
+    ctx.beginPath();ctx.ellipse(0,0,28,10,0,0,Math.PI*2);ctx.stroke();ctx.restore();
+  });
+  ctx.beginPath();ctx.arc(112,178,18,0,Math.PI*2);ctx.stroke();
+  for(let i=0;i<5;i++){ctx.save();ctx.translate(112,178);ctx.rotate(i*Math.PI*2/5);ctx.beginPath();ctx.ellipse(0,-27,12,25,0,0,Math.PI*2);ctx.stroke();ctx.restore();}
+  ctx.restore();
+}
+function prettyWeddingDate(v){
+  if(!v)return '';
+  const [y,m,d]=v.split('-');return `${m} · ${d} · ${y.slice(2)}`;
+}
+
 function load(src){return new Promise(r=>{let i=new Image;i.onload=()=>r(i);i.src=src})}
 function slug(s){return (s||'evento').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,48)||'evento'}
 function id(){return (crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random().toString(16).slice(2))}
 
 async function layout(){
-  const tpl=$('templateStyle')?.value||'classic';
-  const theme=tpl==='dark'?{bg:'#151515',ink:'#f3eee7',accent:'#c9aa7a'}:tpl==='minimal'?{bg:'#ffffff',ink:'#1d1d1d',accent:'#777777'}:{bg:'#f4ede3',ink:'#34291d',accent:'#8d6b3f'};
+  if(($('templateStyle')?.value||'')==='wedding-floral' && $('format').value==='strip'){
+    let c=$('strip'),x=c.getContext('2d'),W=1800,H=5400;
+    lastFinalWidth=W;lastFinalHeight=H;updateCameraDiag();c.width=W;c.height=H;
+    x.fillStyle='#fffdf9';x.fillRect(0,0,W,H);
+
+    const margin=105, top=130, photoGap=28, photoW=W-margin*2, photoH=1180;
+    for(let i=0;i<Math.min(3,photos.length);i++){
+      let im=await load(photos[i]), dx=margin,dy=top+i*(photoH+photoGap);
+      let ir=im.width/im.height,tr=photoW/photoH,sx=0,sy=0,sw=im.width,sh=im.height;
+      if(ir>tr){sw=im.height*tr;sx=(im.width-sw)/2}else{sh=im.width/tr;sy=(im.height-sh)/2}
+      x.drawImage(im,sx,sy,sw,sh,dx,dy,photoW,photoH);
+    }
+
+    const n1=($('weddingName1')?.value||'NAME').trim();
+    const n2=($('weddingName2')?.value||'NAME').trim();
+    const dt=prettyWeddingDate($('weddingDate')?.value||'');
+    const baseY=top+3*(photoH+photoGap)+130;
+
+    floralCorner(x,115,baseY+90,1.35,1);
+    floralCorner(x,W-115,baseY+720,1.35,-1);
+
+    x.textAlign='center';x.fillStyle='#24201c';
+    x.font='italic 116px Georgia';x.fillText(n1,W/2,baseY+190);
+    x.font='30px Georgia';x.letterSpacing='8px';x.fillText('AND',W/2,baseY+260);
+    x.font='italic 116px Georgia';x.fillText(n2,W/2,baseY+375);
+    x.font='32px sans-serif';x.fillStyle='#6d604f';x.fillText(dt,W/2,baseY+485);
+    x.font='24px sans-serif';x.fillStyle='#9a8a74';x.fillText('HALO · BY AB PHOTOGRAPHY',W/2,H-80);
+    return;
+  }
 
   let c=$('strip'),x=c.getContext('2d'),mode=$('format').value,W=mode==='strip'?1800:2400,H=mode==='strip'?5400:3600;lastFinalWidth=W;lastFinalHeight=H;updateCameraDiag();
-  c.width=W;c.height=H;x.fillStyle=theme.bg;x.fillRect(0,0,W,H);
+  c.width=W;c.height=H;x.fillStyle='#f4ede3';x.fillRect(0,0,W,H);
   let m=90,top=260,bottom=170,gap=24,count=photos.length,cols=mode==='4x6'?2:1,rows=Math.ceil(count/cols),pw=(W-m*2-gap*(cols-1))/cols,ph=(H-top-bottom-gap*(rows-1))/rows;
   for(let i=0;i<count;i++){
     let im=await load(photos[i]),col=i%cols,row=Math.floor(i/cols),dx=m+col*(pw+gap),dy=top+row*(ph+gap);
@@ -583,10 +632,11 @@ async function layout(){
     x.drawImage(im,sx,sy,sw,sh,dx,dy,pw,ph);
   }
   const ev=selectedEventConfig();
-  x.fillStyle=theme.ink;x.textAlign='center';x.font='italic 138px Georgia';x.fillText('AB',W/2,138);
+  x.fillStyle='#34291d';x.textAlign='center';x.font='italic 138px Georgia';x.fillText('AB',W/2,138);
   x.font='42px sans-serif';x.fillText(ev.name||'AB PHOTOGRAPHY',W/2,210);
   if(ev.date){x.font='30px sans-serif';x.fillStyle='#7c644b';x.fillText(formatEventDate(ev.date),W/2,246);}
-  x.fillStyle=theme.accent;x.font='36px sans-serif';x.fillText(ev.footer||'CAPTURA · SONRÍE · REPITE',W/2,H-72)
+  x.fillStyle='#8d6b3f';x.font='36px sans-serif';x.fillText(ev.footer||'CAPTURA · SONRÍE · REPITE',W/2,H-72)
+
 }
 
 async function optimizedBlob(){
@@ -675,8 +725,19 @@ $('eventName')?.addEventListener('change',()=>{
 loadEventConfigs();
 
 
-const tplSelect=$('templateStyle');
-if(tplSelect){tplSelect.value=localStorage.getItem('ab_template_style')||'classic';tplSelect.addEventListener('change',()=>localStorage.setItem('ab_template_style',tplSelect.value));}
+function updateWeddingFields(){
+  const w=$('weddingFields'), active=$('templateStyle')?.value==='wedding-floral';
+  if(w)w.style.display=active?'block':'none';
+}
+['weddingName1','weddingName2','weddingDate'].forEach(id=>{
+  const el=$(id); if(el){
+    el.value=localStorage.getItem('halo_'+id)||'';
+    el.addEventListener('input',()=>localStorage.setItem('halo_'+id,el.value));
+  }
+});
+$('templateStyle')?.addEventListener('change',updateWeddingFields);
+updateWeddingFields();
+
 if('serviceWorker'in navigator)addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
 </script>
 </body>
