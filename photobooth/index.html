@@ -626,35 +626,77 @@ function id(){return (crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.
 async function layout(){
   if(($('templateStyle')?.value||'')==='wedding-romantic' && $('format').value==='strip'){
     const c=$('strip'),x=c.getContext('2d'),W=1800,H=5400;
-    lastFinalWidth=W;lastFinalHeight=H;updateCameraDiag();c.width=W;c.height=H;
-    drawRomanticBotanicalDecor(x,W,H);
+    lastFinalWidth=W;lastFinalHeight=H;updateCameraDiag();
+    c.width=W;c.height=H;
 
-    const margin=92,top=120,gap=34,photoW=W-margin*2,photoH=1080;
+    // Base gráfica aprobada.
+    const base=await load('assets/wedding-romantic-approved.png');
+    x.drawImage(base,0,0,W,H);
+
+    // Áreas exactas de las 3 fotografías dentro del diseño aprobado.
+    const slots=[
+      {x:160,y:242,w:1430,h:1035},
+      {x:160,y:1315,w:1430,h:1035},
+      {x:160,y:2385,w:1430,h:1035}
+    ];
+
     for(let i=0;i<Math.min(3,photos.length);i++){
-      const im=await load(photos[i]),dx=margin,dy=top+i*(photoH+gap);
-      const ir=im.width/im.height,tr=photoW/photoH;
+      const im=await load(photos[i]);
+      const slot=slots[i];
+      const ir=im.width/im.height,tr=slot.w/slot.h;
       let sx=0,sy=0,sw=im.width,sh=im.height;
-      if(ir>tr){sw=im.height*tr;sx=(im.width-sw)/2}else{sh=im.width/tr;sy=(im.height-sh)/2}
-      x.fillStyle='rgba(255,255,255,.97)';x.fillRect(dx-8,dy-8,photoW+16,photoH+16);
-      x.strokeStyle='#d7b982';x.lineWidth=3;x.strokeRect(dx-8,dy-8,photoW+16,photoH+16);
-      x.drawImage(im,sx,sy,sw,sh,dx,dy,photoW,photoH);
+      if(ir>tr){sw=im.height*tr;sx=(im.width-sw)/2}
+      else{sh=im.width/tr;sy=(im.height-sh)/2}
+      x.drawImage(im,sx,sy,sw,sh,slot.x,slot.y,slot.w,slot.h);
     }
+
+    // Cubrir únicamente los textos de ejemplo de la referencia,
+    // conservando flores, marco y branding HALO originales.
+    const panelGrad=x.createLinearGradient(0,3500,0,4850);
+    panelGrad.addColorStop(0,'rgba(255,252,246,.97)');
+    panelGrad.addColorStop(1,'rgba(255,249,242,.98)');
+    x.fillStyle=panelGrad;
+    x.fillRect(300,3540,1200,1160);
 
     const n1=($('weddingName1')?.value||'Andrea').trim();
     const n2=($('weddingName2')?.value||'Carlos').trim();
     const dt=prettyWeddingDate($('weddingDate')?.value||'');
-    const y=top+3*(photoH+gap)+120;
 
-    x.textAlign='center';x.fillStyle='#5f705f';
-    x.font='italic 150px "Times New Roman", Georgia, serif';x.fillText(n1,W/2,y+160);
-    x.strokeStyle='#c9a15f';x.lineWidth=3;
-    x.beginPath();x.moveTo(W/2-220,y+235);x.lineTo(W/2-75,y+235);x.moveTo(W/2+75,y+235);x.lineTo(W/2+220,y+235);x.stroke();
-    x.fillStyle='#b88b45';x.font='34px Georgia,serif';x.fillText('A N D',W/2,y+247);
-    x.fillStyle='#5f705f';x.font='italic 150px "Times New Roman", Georgia, serif';x.fillText(n2,W/2,y+410);
-    x.fillStyle='#c49a53';x.font='44px serif';x.fillText('♥',W/2,y+525);
-    if(dt){x.fillStyle='#69766c';x.font='38px Georgia,serif';x.fillText(dt,W/2,y+620);}
-    x.fillStyle='#b18d52';x.font='54px Georgia,serif';x.fillText('H A L O',W/2,H-165);
-    x.fillStyle='#7d817c';x.font='22px sans-serif';x.fillText('PHOTO BOOTH EXPERIENCE',W/2,H-112);
+    // Tipografía de estilo caligráfico disponible de forma nativa en iPadOS.
+    x.textAlign='center';
+    x.fillStyle='#5c6c5b';
+    x.font='150px "Snell Roundhand","Apple Chancery",cursive';
+    x.fillText(n1,W/2,3835);
+
+    x.strokeStyle='#caa35c';
+    x.lineWidth=3;
+    x.beginPath();
+    x.moveTo(W/2-250,3950);x.lineTo(W/2-80,3950);
+    x.moveTo(W/2+80,3950);x.lineTo(W/2+250,3950);
+    x.stroke();
+
+    x.fillStyle='#b98f4e';
+    x.font='36px Georgia,serif';
+    x.fillText('A N D',W/2,3965);
+
+    x.fillStyle='#5c6c5b';
+    x.font='150px "Snell Roundhand","Apple Chancery",cursive';
+    x.fillText(n2,W/2,4205);
+
+    x.fillStyle='#c59b50';
+    x.font='48px Georgia,serif';
+    x.fillText('♥',W/2,4355);
+
+    if(dt){
+      x.fillStyle='#6c776d';
+      x.font='40px Georgia,serif';
+      x.fillText(dt,W/2,4495);
+    }
+
+    // Pequeño ornamento para integrar el panel dinámico con el diseño.
+    x.strokeStyle='#caa35c';x.lineWidth=3;
+    x.beginPath();x.moveTo(W/2-105,4580);x.lineTo(W/2+105,4580);x.stroke();
+
     return;
   }
 
