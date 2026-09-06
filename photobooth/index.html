@@ -223,7 +223,7 @@ select,input{background:#1b1b1b;color:#fff;border:1px solid #333;border-radius:9
     <div class="row"><label>Evento</label><select id="eventName"><option value="Evento AB" data-slug="evento-ab" data-footer="CAPTURA · SONRÍE · REPITE">Evento AB</option></select></div>
     <div class="row"><label>Fotos</label><select id="photoCount"><option>1</option><option>2</option><option>3</option><option selected>4</option></select></div>
     <div class="row"><label>Temporizador</label><select id="timer"><option value="3">3 segundos</option><option value="5">5 segundos</option></select></div><div class="row"><label>Encuadre cámara</label><select id="cameraZoom"><option value="1">1.0×</option><option value="1.4">1.4×</option><option value="1.6">1.6×</option><option value="1.8">1.8×</option><option value="2" selected>2.0×</option><option value="2.2">2.2×</option></select></div>
-    <div class="row"><label>Formato</label><select id="format"><option value="strip">Tira 2x6</option><option value="4x6">4x6</option></select></div><div class="row"><label>Plantilla</label><select id="templateStyle"><option value="classic">Classic</option><option value="minimal">Minimal</option><option value="dark">Dark</option><option value="wedding-romantic">Wedding Floral Blush</option></select></div><div id="weddingFields" style="display:none">
+    <div class="row"><label>Formato</label><select id="format"><option value="strip">Tira 2x6</option><option value="4x6">4x6</option></select></div><div class="row"><label>Plantilla</label><select id="templateStyle"><option value="classic">Classic</option><option value="minimal">Minimal</option><option value="dark">Dark</option><option value="wedding-romantic">Wedding Floral Blush · Vertical</option><option value="wedding-horizontal">Wedding Floral Blush · Horizontal</option></select></div><div id="weddingFields" style="display:none">
 <div class="row"><label>Nombre 1</label><input id="weddingName1" placeholder="Andrea"></div>
 <div class="row"><label>Nombre 2</label><input id="weddingName2" placeholder="Carlos"></div>
 <div class="row"><label>Fecha de boda</label><input id="weddingDate" type="date"></div>
@@ -638,6 +638,64 @@ function slug(s){return (s||'evento').normalize('NFD').replace(/[\u0300-\u036f]/
 function id(){return (crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random().toString(16).slice(2))}
 
 async function layout(){
+  if(($('templateStyle')?.value||'')==='wedding-horizontal'){
+    const c=$('strip'),x=c.getContext('2d'),W=5400,H=3600;
+    lastFinalWidth=W;lastFinalHeight=H;updateCameraDiag();
+    c.width=W;c.height=H;
+
+    // Fondo marfil y fotos en composición horizontal 3:2.
+    x.fillStyle='#fffdf9';x.fillRect(0,0,W,H);
+    const slots=[
+      {x:2461,y:316,w:2595,h:1400},
+      {x:352,y:1881,w:2275,h:1258},
+      {x:2770,y:1881,w:2286,h:1258}
+    ];
+    for(let i=0;i<Math.min(3,photos.length);i++){
+      const im=await load(photos[i]),slot=slots[i];
+      const ir=im.width/im.height,tr=slot.w/slot.h;
+      let sx=0,sy=0,sw=im.width,sh=im.height;
+      if(ir>tr){sw=im.height*tr;sx=(im.width-sw)/2}
+      else{sh=im.width/tr;sy=(im.height-sh)/2}
+      x.drawImage(im,sx,sy,sw,sh,slot.x,slot.y,slot.w,slot.h);
+    }
+
+    // Overlay floral con huecos transparentes para conservar marcos y flores sobre las fotos.
+    const base=await load('assets/wedding-floral-horizontal-3x2.png');
+    x.drawImage(base,0,0,W,H);
+
+    // Nombres y fecha dinámicos dentro del círculo izquierdo.
+    const n1=($('weddingName1')?.value||'Ashley').trim();
+    const n2=($('weddingName2')?.value||'Eduardo').trim();
+    const dt=weddingDateLong($('weddingDate')?.value||'');
+    try{ await document.fonts.load('210px "Great Vibes"'); }catch(e){}
+    x.textAlign='center';
+    x.fillStyle='#5c6c5b';
+    x.font='210px "Great Vibes","Snell Roundhand","Segoe Script","Apple Chancery",cursive';
+    x.fillText(n1,1475,930);
+
+    // Separador dinámico según el idioma del booth: AND (English) / Y (Español).
+    const boothLang=localStorage.getItem('ab_booth_language')||'es';
+    const connector=boothLang==='en'?'AND':'Y';
+    x.strokeStyle='#caa35c';
+    x.lineWidth=6;
+    x.beginPath();
+    x.moveTo(1125,1090);x.lineTo(1370,1090);
+    x.moveTo(1580,1090);x.lineTo(1825,1090);
+    x.stroke();
+    x.fillStyle='#b98f4e';
+    x.font='58px Georgia,serif';
+    x.fillText(connector,1475,1110);
+
+    x.fillStyle='#5c6c5b';
+    x.font='210px "Great Vibes","Snell Roundhand","Segoe Script","Apple Chancery",cursive';
+    x.fillText(n2,1475,1325);
+    if(dt){
+      x.fillStyle='#667265';
+      x.font='72px Georgia,serif';
+      x.fillText(dt,1475,1485);
+    }
+    return;
+  }
   if(($('templateStyle')?.value||'')==='wedding-romantic' && $('format').value==='strip'){
     const c=$('strip'),x=c.getContext('2d'),W=1800,H=5400;
     lastFinalWidth=W;lastFinalHeight=H;updateCameraDiag();
@@ -687,7 +745,8 @@ async function layout(){
 
     x.fillStyle='#b98f4e';
     x.font='36px Georgia,serif';
-    x.fillText('A N D',W/2,3965);
+    const boothLangVertical=localStorage.getItem('ab_booth_language')||'es';
+    x.fillText(boothLangVertical==='en'?'A N D':'Y',W/2,3965);
 
     x.fillStyle='#5c6c5b';
     x.font='190px "Great Vibes","Snell Roundhand","Segoe Script","Apple Chancery",cursive';
@@ -820,7 +879,7 @@ loadEventConfigs();
 
 
 function updateWeddingFields(){
-  const w=$('weddingFields'), active=$('templateStyle')?.value==='wedding-romantic';
+  const w=$('weddingFields'), active=['wedding-romantic','wedding-horizontal'].includes($('templateStyle')?.value||'');
   if(w)w.style.display=active?'block':'none';
 }
 ['weddingName1','weddingName2','weddingDate'].forEach(id=>{
