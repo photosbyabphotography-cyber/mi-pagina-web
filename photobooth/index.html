@@ -1,6 +1,9 @@
 <!doctype html>
 <html lang="es">
 <head>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap" rel="stylesheet">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#080808">
@@ -220,7 +223,7 @@ select,input{background:#1b1b1b;color:#fff;border:1px solid #333;border-radius:9
     <div class="row"><label>Evento</label><select id="eventName"><option value="Evento AB" data-slug="evento-ab" data-footer="CAPTURA · SONRÍE · REPITE">Evento AB</option></select></div>
     <div class="row"><label>Fotos</label><select id="photoCount"><option>1</option><option>2</option><option>3</option><option selected>4</option></select></div>
     <div class="row"><label>Temporizador</label><select id="timer"><option value="3">3 segundos</option><option value="5">5 segundos</option></select></div><div class="row"><label>Encuadre cámara</label><select id="cameraZoom"><option value="1">1.0×</option><option value="1.4">1.4×</option><option value="1.6">1.6×</option><option value="1.8">1.8×</option><option value="2" selected>2.0×</option><option value="2.2">2.2×</option></select></div>
-    <div class="row"><label>Formato</label><select id="format"><option value="strip">Tira 2x6</option><option value="4x6">4x6</option></select></div><div class="row"><label>Plantilla</label><select id="templateStyle"><option value="classic">Classic</option><option value="minimal">Minimal</option><option value="dark">Dark</option><option value="wedding-romantic">Wedding Romantic Botanical</option></select></div><div id="weddingFields" style="display:none">
+    <div class="row"><label>Formato</label><select id="format"><option value="strip">Tira 2x6</option><option value="4x6">4x6</option></select></div><div class="row"><label>Plantilla</label><select id="templateStyle"><option value="classic">Classic</option><option value="minimal">Minimal</option><option value="dark">Dark</option><option value="wedding-romantic">Wedding Floral Blush</option></select></div><div id="weddingFields" style="display:none">
 <div class="row"><label>Nombre 1</label><input id="weddingName1" placeholder="Andrea"></div>
 <div class="row"><label>Nombre 2</label><input id="weddingName2" placeholder="Carlos"></div>
 <div class="row"><label>Fecha de boda</label><input id="weddingDate" type="date"></div>
@@ -641,14 +644,14 @@ async function layout(){
     c.width=W;c.height=H;
 
     // Base gráfica aprobada.
-    const base=await load('assets/wedding-romantic-clean-v4.png');
+    const base=await load('assets/wedding-floral-halo.png');
     x.drawImage(base,0,0,W,H);
 
     // Áreas exactas de las 3 fotografías dentro del diseño aprobado.
     const slots=[
-      {x:160,y:242,w:1430,h:1035},
-      {x:160,y:1315,w:1430,h:1035},
-      {x:160,y:2385,w:1430,h:1035}
+      {x:181,y:570,w:1436,h:934},
+      {x:181,y:1599,w:1436,h:926},
+      {x:181,y:2620,w:1436,h:921}
     ];
 
     for(let i=0;i<Math.min(3,photos.length);i++){
@@ -661,22 +664,18 @@ async function layout(){
       x.drawImage(im,sx,sy,sw,sh,slot.x,slot.y,slot.w,slot.h);
     }
 
-    // Cubrir únicamente los textos de ejemplo de la referencia,
-    // conservando flores, marco y branding HALO originales.
-    const panelGrad=x.createLinearGradient(0,3500,0,4850);
-    panelGrad.addColorStop(0,'rgba(255,252,246,.97)');
-    panelGrad.addColorStop(1,'rgba(255,249,242,.98)');
-    x.fillStyle=panelGrad;
-    x.fillRect(300,3540,1200,1160);
+    // La plantilla ya incluye un área limpia para los datos dinámicos.
 
     const n1=($('weddingName1')?.value||'Andrea').trim();
     const n2=($('weddingName2')?.value||'Carlos').trim();
     const dt=weddingDateLong($('weddingDate')?.value||'');
 
-    // Tipografía de estilo caligráfico disponible de forma nativa en iPadOS.
+    // Caligrafía elegante para los nombres. Great Vibes se carga desde Google Fonts
+    // y mantiene fallbacks nativos para iPad/PC si no hubiera conexión.
+    try{ await document.fonts.load('190px "Great Vibes"'); }catch(e){}
     x.textAlign='center';
     x.fillStyle='#5c6c5b';
-    x.font='150px "Snell Roundhand","Apple Chancery",cursive';
+    x.font='190px "Great Vibes","Snell Roundhand","Segoe Script","Apple Chancery",cursive';
     x.fillText(n1,W/2,3835);
 
     x.strokeStyle='#caa35c';
@@ -691,7 +690,7 @@ async function layout(){
     x.fillText('A N D',W/2,3965);
 
     x.fillStyle='#5c6c5b';
-    x.font='150px "Snell Roundhand","Apple Chancery",cursive';
+    x.font='190px "Great Vibes","Snell Roundhand","Segoe Script","Apple Chancery",cursive';
     x.fillText(n2,W/2,4205);
 
     x.fillStyle='#c59b50';
@@ -700,18 +699,13 @@ async function layout(){
 
     
 
-    // Dejar UNA SOLA fecha: la dinámica del cliente, en el lugar exacto
-    // donde la plantilla traía "MAYO 25, 2025".
-    x.save();
-    x.fillStyle='#fffaf5';
-    x.fillRect(360,4620,1080,320);
+    // Fecha dinámica del cliente sobre el área blanca inferior.
     if(dt){
       x.textAlign='center';
       x.fillStyle='#667265';
       x.font='64px Georgia,serif';
-      x.fillText(dt,W/2,4815);
+      x.fillText(dt,W/2,4510);
     }
-    x.restore();
 
     return;
   }
