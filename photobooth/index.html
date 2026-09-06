@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#080808">
-<title>HALO Photobooth V5.6 Event Zoom 2X</title>
+<title>HALO Photobooth V5.6 Event Zoom 2X · Wedding Date Fix</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 <style>
@@ -227,7 +227,7 @@ select,input{background:#1b1b1b;color:#fff;border:1px solid #333;border-radius:9
 </div>
     <div class="row"><label id="languageLabel">Idioma</label><select id="language"><option value="es">Español</option><option value="en">English</option></select></div><div class="row"><label>PIN administrador</label><input id="adminPin" type="password" inputmode="numeric" maxlength="6" value="2468"></div><div class="row"><label>Regreso automático</label><select id="autoReturn"><option value="20">20 segundos</option><option value="30" selected>30 segundos</option><option value="45">45 segundos</option><option value="60">60 segundos</option></select></div><div class="row"><label>Modo evento</label><button id="toggleEventMode" class="btn secondary" type="button">ACTIVAR</button></div>
   </div>
-  <p class="small">HALO Photobooth V5.6 · Event Zoom 2X</p>
+  <p class="small">HALO Photobooth V5.6 · Event Zoom 2X · Wedding Date Fix</p>
 </section>
 
 <div id="pinModal" class="pin-modal hidden"><div class="pin-card"><h2>Acceso administrador</h2><div class="small">Ingresa el PIN.</div><input id="pinEntry" type="password" inputmode="numeric" maxlength="6"><div id="pinError" class="small" style="color:#e8a0a0;min-height:18px"></div><div class="pin-actions"><button id="pinCancel" class="btn secondary">CANCELAR</button><button id="pinOk" class="btn primary">ENTRAR</button></div></div></div><canvas id="capture" class="hidden"></canvas>
@@ -687,15 +687,14 @@ async function layout(){
     x.font='48px Georgia,serif';
     x.fillText('♥',W/2,4355);
 
-    if(dt){
-      x.fillStyle='#6c776d';
-      x.font='40px Georgia,serif';
-      x.fillText(dt,W/2,4495);
-    }
+    
 
-    // Pequeño ornamento para integrar el panel dinámico con el diseño.
-    x.strokeStyle='#caa35c';x.lineWidth=3;
-    x.beginPath();x.moveTo(W/2-105,4580);x.lineTo(W/2+105,4580);x.stroke();
+    // ÚNICA fecha: grande, dinámica y centrada en el lugar de la fecha impresa.
+    if(dt){
+      x.fillStyle='#667265';
+      x.font='52px Georgia,serif';
+      x.fillText(dt.toUpperCase(),W/2,4700);
+    }
 
     return;
   }
