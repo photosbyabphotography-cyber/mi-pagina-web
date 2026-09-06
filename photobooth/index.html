@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#080808">
-<title>HALO Photobooth V5.6 Event Zoom</title>
+<title>HALO Photobooth V5.6 Event Zoom 2X</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 <style>
@@ -165,9 +165,7 @@ select,input{background:#1b1b1b;color:#fff;border:1px solid #333;border-radius:9
 
 
 /* V3.7: encuadre normal para photobooth */
-.camera{overflow:hidden}
-.camera video{transform:scaleX(-1) scale(var(--camera-zoom,1.4))!important;transform-origin:center center}
-.camera video.no-mirror{transform:scale(var(--camera-zoom,1.4))!important}
+.camera{overflow:hidden}.camera video{transform:scaleX(-1) scale(var(--camera-zoom,2))!important;transform-origin:center center}
 
 @media (orientation:landscape) and (min-width:700px){
  #cameraScreen .shutter{width:104px;height:104px}
@@ -221,7 +219,7 @@ select,input{background:#1b1b1b;color:#fff;border:1px solid #333;border-radius:9
   <div class="settings">
     <div class="row"><label>Evento</label><select id="eventName"><option value="Evento AB" data-slug="evento-ab" data-footer="CAPTURA · SONRÍE · REPITE">Evento AB</option></select></div>
     <div class="row"><label>Fotos</label><select id="photoCount"><option>1</option><option>2</option><option>3</option><option selected>4</option></select></div>
-    <div class="row"><label>Temporizador</label><select id="timer"><option value="3">3 segundos</option><option value="5">5 segundos</option></select></div><div class="row"><label>Encuadre cámara</label><select id="cameraZoom"><option value="1">1.0×</option><option value="1.2">1.2×</option><option value="1.4" selected>1.4×</option><option value="1.6">1.6×</option></select></div>
+    <div class="row"><label>Temporizador</label><select id="timer"><option value="3">3 segundos</option><option value="5">5 segundos</option></select></div><div class="row"><label>Encuadre cámara</label><select id="cameraZoom"><option value="1">1.0×</option><option value="1.4">1.4×</option><option value="1.6">1.6×</option><option value="1.8">1.8×</option><option value="2" selected>2.0×</option><option value="2.2">2.2×</option></select></div>
     <div class="row"><label>Formato</label><select id="format"><option value="strip">Tira 2x6</option><option value="4x6">4x6</option></select></div><div class="row"><label>Plantilla</label><select id="templateStyle"><option value="classic">Classic</option><option value="minimal">Minimal</option><option value="dark">Dark</option><option value="wedding-romantic">Wedding Romantic Botanical</option></select></div><div id="weddingFields" style="display:none">
 <div class="row"><label>Nombre 1</label><input id="weddingName1" placeholder="Andrea"></div>
 <div class="row"><label>Nombre 2</label><input id="weddingName2" placeholder="Carlos"></div>
@@ -229,7 +227,7 @@ select,input{background:#1b1b1b;color:#fff;border:1px solid #333;border-radius:9
 </div>
     <div class="row"><label id="languageLabel">Idioma</label><select id="language"><option value="es">Español</option><option value="en">English</option></select></div><div class="row"><label>PIN administrador</label><input id="adminPin" type="password" inputmode="numeric" maxlength="6" value="2468"></div><div class="row"><label>Regreso automático</label><select id="autoReturn"><option value="20">20 segundos</option><option value="30" selected>30 segundos</option><option value="45">45 segundos</option><option value="60">60 segundos</option></select></div><div class="row"><label>Modo evento</label><button id="toggleEventMode" class="btn secondary" type="button">ACTIVAR</button></div>
   </div>
-  <p class="small">HALO Photobooth V5.6 · Event Zoom</p>
+  <p class="small">HALO Photobooth V5.6 · Event Zoom 2X</p>
 </section>
 
 <div id="pinModal" class="pin-modal hidden"><div class="pin-card"><h2>Acceso administrador</h2><div class="small">Ingresa el PIN.</div><input id="pinEntry" type="password" inputmode="numeric" maxlength="6"><div id="pinError" class="small" style="color:#e8a0a0;min-height:18px"></div><div class="pin-actions"><button id="pinCancel" class="btn secondary">CANCELAR</button><button id="pinOk" class="btn primary">ENTRAR</button></div></div></div><canvas id="capture" class="hidden"></canvas>
@@ -246,12 +244,8 @@ let stream=null,facing='user',photos=[],busy=false,currentBlob=null,currentPath=
 function show(id){screens.forEach(x=>x.classList.remove('active'));$(id).classList.add('active')}
 function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
 
-function cameraZoomValue(){return Math.max(1,Math.min(1.6,parseFloat($('cameraZoom')?.value||localStorage.getItem('halo_camera_zoom')||'1.4')||1.4))}
-function applyCameraZoom(){
-  const z=cameraZoomValue();
-  document.documentElement.style.setProperty('--camera-zoom',z);
-}
-
+function cameraZoomValue(){return Math.max(1,Math.min(2.2,parseFloat($('cameraZoom')?.value||localStorage.getItem('halo_camera_zoom')||'2')||2))}
+function applyCameraZoom(){document.documentElement.style.setProperty('--camera-zoom',cameraZoomValue())}
 function normalCameraRect(v){
   const vw=v.videoWidth||1,vh=v.videoHeight||1,z=cameraZoomValue();
   const sw=vw/z,sh=vh/z;
@@ -516,9 +510,7 @@ function snap(){
 
   const r=normalCameraRect(v);
   if(facing==='user'){
-    x.save();
-    x.translate(c.width,0);
-    x.scale(-1,1);
+    x.save();x.translate(c.width,0);x.scale(-1,1);
     x.drawImage(v,r.sx,r.sy,r.sw,r.sh,0,0,c.width,c.height);
     x.restore();
   }else{
@@ -780,12 +772,9 @@ $('eventLock').onclick=()=>eventMode?askPin('unlock'):show('settingsScreen');$('
 $('toggleEventMode').onclick=()=>{const pin=($('adminPin').value||'').trim();if(!/^\d{4,6}$/.test(pin)){alert('Usa un PIN de 4 a 6 números.');return}localStorage.setItem('ab_admin_pin',pin);localStorage.setItem('ab_auto_return',$('autoReturn').value||'30');eventMode=!eventMode;localStorage.setItem('ab_event_mode',eventMode?'1':'0');syncEventModeUI();show('home')};
 $('adminPin').value=localStorage.getItem('ab_admin_pin')||'2468';$('autoReturn').value=localStorage.getItem('ab_auto_return')||'30';syncEventModeUI();
 if($('cameraZoom')){
-  $('cameraZoom').value=localStorage.getItem('halo_camera_zoom')||'1.4';
-  applyCameraZoom();
-  $('cameraZoom').addEventListener('change',e=>{
-    localStorage.setItem('halo_camera_zoom',e.target.value);
-    applyCameraZoom();
-  });
+ $('cameraZoom').value=localStorage.getItem('halo_camera_zoom')||'2';
+ applyCameraZoom();
+ $('cameraZoom').addEventListener('change',e=>{localStorage.setItem('halo_camera_zoom',e.target.value);applyCameraZoom()});
 }
 
 
