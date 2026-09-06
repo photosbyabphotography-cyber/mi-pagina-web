@@ -1,0 +1,5 @@
+CAMBIO WEDDING:
+- Se eliminó la fecha pequeña.
+- Se eliminó la fecha fija MAYO 25, 2025 del gráfico.
+- Queda una sola fecha dinámica, grande.
+- Cámara/zoom 1.0–2.2x, QR, Supabase y demás funciones sin cambios.
