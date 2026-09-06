@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#080808">
-<title>HALO Photobooth V5.6 Event Zoom 2X · Wedding Date Fix 3</title>
+<title>HALO Photobooth V5.6 Event Zoom 2X · Wedding Dynamic Date Final</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 <style>
@@ -227,7 +227,7 @@ select,input{background:#1b1b1b;color:#fff;border:1px solid #333;border-radius:9
 </div>
     <div class="row"><label id="languageLabel">Idioma</label><select id="language"><option value="es">Español</option><option value="en">English</option></select></div><div class="row"><label>PIN administrador</label><input id="adminPin" type="password" inputmode="numeric" maxlength="6" value="2468"></div><div class="row"><label>Regreso automático</label><select id="autoReturn"><option value="20">20 segundos</option><option value="30" selected>30 segundos</option><option value="45">45 segundos</option><option value="60">60 segundos</option></select></div><div class="row"><label>Modo evento</label><button id="toggleEventMode" class="btn secondary" type="button">ACTIVAR</button></div>
   </div>
-  <p class="small">HALO Photobooth V5.6 · Event Zoom 2X · Wedding Date Fix 3</p>
+  <p class="small">HALO Photobooth V5.6 · Event Zoom 2X · Wedding Dynamic Date Final</p>
 </section>
 
 <div id="pinModal" class="pin-modal hidden"><div class="pin-card"><h2>Acceso administrador</h2><div class="small">Ingresa el PIN.</div><input id="pinEntry" type="password" inputmode="numeric" maxlength="6"><div id="pinError" class="small" style="color:#e8a0a0;min-height:18px"></div><div class="pin-actions"><button id="pinCancel" class="btn secondary">CANCELAR</button><button id="pinOk" class="btn primary">ENTRAR</button></div></div></div><canvas id="capture" class="hidden"></canvas>
@@ -582,7 +582,18 @@ function botanicalCorner(ctx,x,y,scale=1,flip=1){
 }
 function prettyWeddingDate(v){
   if(!v)return '';
-  const [y,m,d]=v.split('-');return `${m} · ${d} · ${y.slice(2)}`;
+  const [y,m,d]=v.split('-');return `${m}
+
+function weddingDateLong(v){
+  if(!v) return '';
+  const [y,m,d]=v.split('-').map(Number);
+  const lang=localStorage.getItem('ab_booth_language')||'es';
+  const monthsEs=['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
+  const monthsEn=['JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE','JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER'];
+  const month=(lang==='en'?monthsEn:monthsEs)[m-1]||'';
+  return `${month} ${String(d).padStart(2,'0')}, ${y}`;
+}
+ · ${d} · ${y.slice(2)}`;
 }
 
 
@@ -660,7 +671,7 @@ async function layout(){
 
     const n1=($('weddingName1')?.value||'Andrea').trim();
     const n2=($('weddingName2')?.value||'Carlos').trim();
-    const dt=prettyWeddingDate($('weddingDate')?.value||'');
+    const dt=weddingDateLong($('weddingDate')?.value||'');
 
     // Tipografía de estilo caligráfico disponible de forma nativa en iPadOS.
     x.textAlign='center';
@@ -689,19 +700,19 @@ async function layout(){
 
     
 
-    // Limpiar por completo la fecha fija que venía impresa en la imagen base
-    // y dejar UNA SOLA fecha dinámica, grande.
-    const dateBg=x.createLinearGradient(0,4350,0,4770);
+    // Reemplazar la fecha fija de la plantilla por UNA fecha dinámica del cliente.
+    // La zona corresponde al texto original "MAYO 25, 2025".
+    const dateBg=x.createLinearGradient(0,4380,0,4740);
     dateBg.addColorStop(0,'#fffaf5');
     dateBg.addColorStop(1,'#fff8f1');
     x.fillStyle=dateBg;
-    x.fillRect(430,4350,940,420);
+    x.fillRect(360,4380,1080,360);
 
     if(dt){
       x.textAlign='center';
       x.fillStyle='#667265';
-      x.font='78px Georgia,serif';
-      x.fillText(dt.toUpperCase(),W/2,4585);
+      x.font='64px Georgia,serif';
+      x.fillText(dt,W/2,4588);
     }
 
     return;
