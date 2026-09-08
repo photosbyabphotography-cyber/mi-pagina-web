@@ -188,7 +188,6 @@ select,input{background:#1b1b1b;color:#fff;border:1px solid #333;border-radius:9
   <img class="halo-brand-logo" src="assets/halo-photobooth-logo.png" alt="HALO Photobooth Experience by AB Photography"><p class="gold"><span id="captureMoment">CAPTURA EL MOMENTO</span></p><p class="muted"><span id="enjoyText">DISFRUTA · SONRÍE · REPITE</span></p>
   <button id="start" class="btn primary big">📷<br><span id="startText">TOCAR PARA COMENZAR</span></button>
   <button id="settingsBtn" class="btn secondary" style="margin-top:14px"><span id="settingsText">CONFIGURACIÓN</span></button>
-  <div class="small" style="margin-top:10px">OFFLINE TEST V1</div>
 </section>
 
 <section id="cameraScreen" class="screen">
@@ -230,8 +229,9 @@ select,input{background:#1b1b1b;color:#fff;border:1px solid #333;border-radius:9
 <div class="row"><label>Fecha de boda</label><input id="weddingDate" type="date"></div>
 </div>
     <div class="row"><label id="languageLabel">Idioma</label><select id="language"><option value="es">Español</option><option value="en">English</option></select></div><div class="row"><label>PIN administrador</label><input id="adminPin" type="password" inputmode="numeric" maxlength="6" value="2468"></div><div class="row"><label>Regreso automático</label><select id="autoReturn"><option value="20">20 segundos</option><option value="30" selected>30 segundos</option><option value="45">45 segundos</option><option value="60">60 segundos</option></select></div><div class="row"><label>Modo evento</label><button id="toggleEventMode" class="btn secondary" type="button">ACTIVAR</button></div>
+    <div class="row" style="grid-column:1/-1;display:block;border-top:1px solid #333;padding-top:14px"><label>Respaldo y sincronización</label><div id="offlineStats" class="small" style="margin:8px 0;line-height:1.7;text-align:left">Cargando respaldo local…</div><button id="syncNow" class="btn secondary" type="button" style="width:100%">SINCRONIZAR AHORA</button></div>
   </div>
-  <p class="small">HALO Photobooth V5.6 · Event Zoom 2X · Wedding Nombres Limpios</p>
+  <p class="small">HALO Photobooth V5.7 · Offline Queue Test · Zoom 2X</p>
 </section>
 
 <div id="pinModal" class="pin-modal hidden"><div class="pin-card"><h2>Acceso administrador</h2><div class="small">Ingresa el PIN.</div><input id="pinEntry" type="password" inputmode="numeric" maxlength="6"><div id="pinError" class="small" style="color:#e8a0a0;min-height:18px"></div><div class="pin-actions"><button id="pinCancel" class="btn secondary">CANCELAR</button><button id="pinOk" class="btn primary">ENTRAR</button></div></div></div><canvas id="capture" class="hidden"></canvas>
@@ -239,7 +239,7 @@ select,input{background:#1b1b1b;color:#fff;border:1px solid #333;border-radius:9
 <script>
 const SUPABASE_URL="https://kuvdvhmitxucqfqendfu.supabase.co";
 const SUPABASE_KEY="sb_publishable_yt2XQ6hNfAWtcUjyXovvEA_D1Cab-_o";
-const sb=window.supabase?.createClient ? window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY) : null;
+const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const DOWNLOAD_BASE='https://abphotographytx.com/booth.html';
 
 const $=x=>document.getElementById(x),screens=[...document.querySelectorAll('.screen')];
@@ -794,24 +794,45 @@ async function optimizedBlob(){
 
 function setProgress(p){$('bar').style.width=Math.max(0,Math.min(100,p))+'%'}
 
-async function uploadAndQR(){
-  currentBlob=await optimizedBlob(); const kb=Math.round(currentBlob.size/1024);
-  $('statusText').textContent=`Foto optimizada: ${kb} KB. Subiendo…`; setProgress(20);
-  if(!navigator.onLine || !sb){$('statusText').textContent=`Sin conexión. Foto lista (${kb} KB). Puedes guardarla ahora; el QR necesita conexión.`;setProgress(0);return}
-  const eventSlug=selectedEventConfig().slug, accessToken=id();
-  currentPath=`sessions/${eventSlug}/${Date.now()}-${id()}.jpg`;
-  const {error:up}=await sb.storage.from('photobooth').upload(currentPath,currentBlob,{contentType:'image/jpeg',cacheControl:'3600',upsert:false});
-  if(up){$('statusText').textContent='No se pudo subir: '+up.message;setProgress(0);return}
-  setProgress(65);
-  const {error:reg}=await sb.from('photobooth_photos').insert({access_token:accessToken,path:currentPath,event_slug:eventSlug});
-  if(reg){$('statusText').textContent='La foto subió, pero no se pudo crear el QR: '+reg.message;return}
-  setProgress(100); const downloadUrl=DOWNLOAD_BASE+'?t='+encodeURIComponent(accessToken);
-  $('statusText').textContent=`¡Lista! ${kb} KB · QR válido por 3 días.`;
-  $('qrWrap').classList.remove('hidden');$('qr').innerHTML='';
-  if(typeof QRCode==='undefined'){$('statusText').textContent=`Foto subida (${kb} KB), pero el generador QR no está disponible.`;return}
-  currentQR=new QRCode($('qr'),{text:downloadUrl,width:170,height:170,correctLevel:QRCode.CorrectLevel.M});
+// HALO Offline Queue V1: IndexedDB keeps every final composition until it is synced.
+const HALO_DB='halo_photobooth_local_v1', HALO_STORE='photos';
+let syncRunning=false;
+function openHaloDB(){return new Promise((resolve,reject)=>{const r=indexedDB.open(HALO_DB,1);r.onupgradeneeded=()=>{const db=r.result;if(!db.objectStoreNames.contains(HALO_STORE))db.createObjectStore(HALO_STORE,{keyPath:'id'})};r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error)})}
+async function dbPut(v){const db=await openHaloDB();return new Promise((res,rej)=>{const t=db.transaction(HALO_STORE,'readwrite');t.objectStore(HALO_STORE).put(v);t.oncomplete=()=>res();t.onerror=()=>rej(t.error)})}
+async function dbAll(){const db=await openHaloDB();return new Promise((res,rej)=>{const r=db.transaction(HALO_STORE).objectStore(HALO_STORE).getAll();r.onsuccess=()=>res(r.result||[]);r.onerror=()=>rej(r.error)})}
+async function updateOfflineStats(){try{const a=await dbAll(),p=a.filter(x=>x.status!=='synced').length,syn=a.filter(x=>x.status==='synced').length;const el=$('offlineStats');if(el)el.innerHTML=`Guardadas localmente: <b>${a.length}</b><br>Subidas a Supabase: <b>${syn}</b><br>Pendientes: <b>${p}</b><br>Internet: <b>${navigator.onLine?'Conectado':'Sin conexión'}</b>`}catch(e){const el=$('offlineStats');if(el)el.textContent='No se pudo leer el respaldo local.'}}
+async function syncOne(item,showQR=false){
+  if(!navigator.onLine)return false;
+  try{
+    if(item.status==='pending_upload'){
+      const {error}=await sb.storage.from('photobooth').upload(item.path,item.blob,{contentType:'image/jpeg',cacheControl:'3600',upsert:false});
+      if(error && !/already exists|duplicate/i.test(error.message||''))throw error;
+      item.status='pending_register';await dbPut(item);
+    }
+    if(item.status==='pending_register'){
+      const {error}=await sb.from('photobooth_photos').insert({access_token:item.token,path:item.path,event_slug:item.eventSlug});
+      if(error && !/duplicate|unique/i.test(error.message||''))throw error;
+      item.status='synced';item.syncedAt=Date.now();await dbPut(item);
+    }
+    if(showQR){setProgress(100);const u=DOWNLOAD_BASE+'?t='+encodeURIComponent(item.token);$('statusText').textContent=`¡Lista! ${Math.round(item.blob.size/1024)} KB · QR válido por 3 días.`;$('qrWrap').classList.remove('hidden');$('qr').innerHTML='';currentQR=new QRCode($('qr'),{text:u,width:170,height:170,correctLevel:QRCode.CorrectLevel.M})}
+    return true;
+  }catch(e){item.lastError=e?.message||String(e);await dbPut(item);return false}
 }
-
+async function syncPending(showCurrentId=null){
+  if(syncRunning||!navigator.onLine){await updateOfflineStats();return}syncRunning=true;
+  try{const all=await dbAll();for(const item of all.filter(x=>x.status!=='synced'))await syncOne(item,item.id===showCurrentId)}finally{syncRunning=false;await updateOfflineStats()}
+}
+async function uploadAndQR(){
+  currentBlob=await optimizedBlob();const kb=Math.round(currentBlob.size/1024),eventSlug=selectedEventConfig().slug,token=id(),localId=Date.now()+'-'+id();
+  currentPath=`sessions/${eventSlug}/${Date.now()}-${id()}.jpg`;
+  const item={id:localId,createdAt:Date.now(),eventSlug,path:currentPath,token,blob:currentBlob,status:'pending_upload',lastError:''};
+  try{await dbPut(item)}catch(e){$('statusText').textContent='ADVERTENCIA: no se pudo crear el respaldo local. '+(e?.message||e);return}
+  await updateOfflineStats();
+  if(!navigator.onLine){$('statusText').textContent=`Guardada localmente (${kb} KB) · Pendiente de subir cuando regrese Internet.`;setProgress(0);return}
+  $('statusText').textContent=`Guardada localmente (${kb} KB) · Subiendo…`;setProgress(20);
+  const ok=await syncOne(item,true);await updateOfflineStats();
+  if(!ok){$('statusText').textContent=`Guardada localmente (${kb} KB) · La subida falló y quedó pendiente.`;setProgress(0)}
+}
 async function shoot(){
   if(busy)return;busy=true;photos=[];$('qrWrap').classList.add('hidden');setProgress(0);
   let total=+$('photoCount').value;
@@ -892,6 +913,10 @@ function updateWeddingFields(){
 });
 $('templateStyle')?.addEventListener('change',updateWeddingFields);
 updateWeddingFields();
+
+$('syncNow')?.addEventListener('click',async()=>{const b=$('syncNow');b.disabled=true;b.textContent='SINCRONIZANDO…';await syncPending();b.disabled=false;b.textContent='SINCRONIZAR AHORA'});
+window.addEventListener('online',()=>syncPending());window.addEventListener('offline',updateOfflineStats);
+setInterval(()=>{if(navigator.onLine)syncPending()},30000);updateOfflineStats();setTimeout(()=>syncPending(),2500);
 
 if('serviceWorker'in navigator)addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
 </script>

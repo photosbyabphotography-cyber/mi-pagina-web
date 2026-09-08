@@ -1,0 +1,7 @@
+HALO V5.7 Offline Queue Test
+- Guarda cada composición automáticamente en IndexedDB.
+- Intenta subir a Supabase inmediatamente.
+- Si falla o no hay Internet, queda pendiente.
+- Reintenta al volver Internet y cada 30 segundos.
+- Configuración muestra guardadas/subidas/pendientes y botón Sincronizar ahora.
+- El botón GUARDAR a Fotos del iPad se mantiene sin cambios.
