@@ -188,6 +188,7 @@ select,input{background:#1b1b1b;color:#fff;border:1px solid #333;border-radius:9
   <img class="halo-brand-logo" src="assets/halo-photobooth-logo.png" alt="HALO Photobooth Experience by AB Photography"><p class="gold"><span id="captureMoment">CAPTURA EL MOMENTO</span></p><p class="muted"><span id="enjoyText">DISFRUTA · SONRÍE · REPITE</span></p>
   <button id="start" class="btn primary big">📷<br><span id="startText">TOCAR PARA COMENZAR</span></button>
   <button id="settingsBtn" class="btn secondary" style="margin-top:14px"><span id="settingsText">CONFIGURACIÓN</span></button>
+  <div class="small" style="margin-top:10px">OFFLINE TEST V1</div>
 </section>
 
 <section id="cameraScreen" class="screen">
@@ -238,7 +239,7 @@ select,input{background:#1b1b1b;color:#fff;border:1px solid #333;border-radius:9
 <script>
 const SUPABASE_URL="https://kuvdvhmitxucqfqendfu.supabase.co";
 const SUPABASE_KEY="sb_publishable_yt2XQ6hNfAWtcUjyXovvEA_D1Cab-_o";
-const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const sb=window.supabase?.createClient ? window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY) : null;
 const DOWNLOAD_BASE='https://abphotographytx.com/booth.html';
 
 const $=x=>document.getElementById(x),screens=[...document.querySelectorAll('.screen')];
@@ -796,7 +797,7 @@ function setProgress(p){$('bar').style.width=Math.max(0,Math.min(100,p))+'%'}
 async function uploadAndQR(){
   currentBlob=await optimizedBlob(); const kb=Math.round(currentBlob.size/1024);
   $('statusText').textContent=`Foto optimizada: ${kb} KB. Subiendo…`; setProgress(20);
-  if(!navigator.onLine){$('statusText').textContent=`Sin conexión. Foto lista (${kb} KB). Puedes guardarla ahora; el QR necesita conexión.`;setProgress(0);return}
+  if(!navigator.onLine || !sb){$('statusText').textContent=`Sin conexión. Foto lista (${kb} KB). Puedes guardarla ahora; el QR necesita conexión.`;setProgress(0);return}
   const eventSlug=selectedEventConfig().slug, accessToken=id();
   currentPath=`sessions/${eventSlug}/${Date.now()}-${id()}.jpg`;
   const {error:up}=await sb.storage.from('photobooth').upload(currentPath,currentBlob,{contentType:'image/jpeg',cacheControl:'3600',upsert:false});
@@ -807,6 +808,7 @@ async function uploadAndQR(){
   setProgress(100); const downloadUrl=DOWNLOAD_BASE+'?t='+encodeURIComponent(accessToken);
   $('statusText').textContent=`¡Lista! ${kb} KB · QR válido por 3 días.`;
   $('qrWrap').classList.remove('hidden');$('qr').innerHTML='';
+  if(typeof QRCode==='undefined'){$('statusText').textContent=`Foto subida (${kb} KB), pero el generador QR no está disponible.`;return}
   currentQR=new QRCode($('qr'),{text:downloadUrl,width:170,height:170,correctLevel:QRCode.CorrectLevel.M});
 }
 
