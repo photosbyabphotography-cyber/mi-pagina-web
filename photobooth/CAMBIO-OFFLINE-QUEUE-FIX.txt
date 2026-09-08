@@ -1,0 +1,4 @@
+HALO V5.7.1 Offline Queue Fix
+- Cambia el respaldo de Blob a ArrayBuffer para mayor compatibilidad con Safari/iPadOS.
+- Mejora los mensajes de error de IndexedDB; ya no debe mostrar null.
+- No modifica cámara, zoom 2X, plantillas ni QR.
