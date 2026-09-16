@@ -1,9 +1,9 @@
-const CACHE='halo-v591-fast-offline-20260916';
-const INDEX=new URL('./index.html',self.location.href).href;
+const CACHE='halo-v592-safari-no-redirect-20260916';
+const SHELL=new URL('./',self.location.href).href;
 
 // Keep installation small so Safari can activate offline mode immediately.
 const CORE=[
-  './index.html',
+  './',
   './manifest.webmanifest',
   './supabase-js-2.116.0.js',
   './qrcode-1.0.0.min.js'
@@ -41,7 +41,7 @@ self.addEventListener('fetch',event=>{
 
   if(event.request.mode==='navigate'){
     event.respondWith(
-      caches.match(INDEX).then(cached=>cached||fetch(event.request))
+      caches.match(SHELL).then(cached=>cached||fetch(event.request))
     );
     return;
   }
