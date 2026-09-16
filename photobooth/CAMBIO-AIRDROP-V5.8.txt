@@ -1,0 +1,6 @@
+HALO V5.8 · AirDrop Test
+- Agrega botón COMPARTIR · AIRDROP en pantalla final.
+- Usa la hoja nativa Compartir de iPadOS con el JPEG final.
+- Funciona sin Internet; AirDrop requiere Wi-Fi y Bluetooth activos.
+- Conserva cola offline/Supabase de V5.7.1.
+- No cambia cámara, zoom ni plantillas.

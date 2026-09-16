@@ -206,6 +206,7 @@ select,input{background:#1b1b1b;color:#fff;border:1px solid #333;border-radius:9
     <div id="qrWrap" class="hidden"><div id="visibleCountdown" class="return-note hidden" style="font-weight:700;font-size:16px;margin:10px 0"></div><div id="finalQrHelper" class="small" style="margin:8px 0 12px;text-align:center">Escanea para guardar tu foto · Scan to save your photo</div><div id="qr"></div><div class="small">Escanea para guardar tu foto en tu teléfono.</div></div>
   </div>
   <div class="actions"><button id="retake" class="btn secondary"><span id="retakeText">REPETIR</span></button><button id="save" class="btn primary"><span id="saveText">GUARDAR</span></button></div>
+  <button id="airdrop" class="btn secondary" style="margin-top:10px"><span id="airdropText">COMPARTIR · AIRDROP</span></button>
   <button id="finish" class="btn secondary" style="margin-top:10px"><span id="finishText">FINALIZAR</span></button><div id="returnNote" class="return-note hidden"></div>
 </section>
 
@@ -231,7 +232,7 @@ select,input{background:#1b1b1b;color:#fff;border:1px solid #333;border-radius:9
     <div class="row"><label id="languageLabel">Idioma</label><select id="language"><option value="es">Español</option><option value="en">English</option></select></div><div class="row"><label>PIN administrador</label><input id="adminPin" type="password" inputmode="numeric" maxlength="6" value="2468"></div><div class="row"><label>Regreso automático</label><select id="autoReturn"><option value="20">20 segundos</option><option value="30" selected>30 segundos</option><option value="45">45 segundos</option><option value="60">60 segundos</option></select></div><div class="row"><label>Modo evento</label><button id="toggleEventMode" class="btn secondary" type="button">ACTIVAR</button></div>
     <div class="row" style="grid-column:1/-1;display:block;border-top:1px solid #333;padding-top:14px"><label>Respaldo y sincronización</label><div id="offlineStats" class="small" style="margin:8px 0;line-height:1.7;text-align:left">Cargando respaldo local…</div><button id="syncNow" class="btn secondary" type="button" style="width:100%">SINCRONIZAR AHORA</button></div>
   </div>
-  <p class="small">HALO Photobooth V5.7.1 · Offline Queue Fix · Zoom 2X</p>
+  <p class="small">HALO Photobooth V5.8 · AirDrop Test · Zoom 2X</p>
 </section>
 
 <div id="pinModal" class="pin-modal hidden"><div class="pin-card"><h2>Acceso administrador</h2><div class="small">Ingresa el PIN.</div><input id="pinEntry" type="password" inputmode="numeric" maxlength="6"><div id="pinError" class="small" style="color:#e8a0a0;min-height:18px"></div><div class="pin-actions"><button id="pinCancel" class="btn secondary">CANCELAR</button><button id="pinOk" class="btn primary">ENTRAR</button></div></div></div><canvas id="capture" class="hidden"></canvas>
@@ -260,8 +261,8 @@ function network(){let n=$('net');if(navigator.onLine){n.textContent='● ONLINE
 
 
 const I18N={
- es:{captureMoment:'CAPTURA EL MOMENTO',enjoyText:'DISFRUTA · SONRÍE · REPITE',startText:'TOCAR PARA COMENZAR',settingsText:'CONFIGURACIÓN',retakeText:'REPETIR',saveText:'GUARDAR',finishText:'FINALIZAR',cameraHelp:'Toca el botón blanco. Las fotos se tomarán automáticamente.',languageLabel:'Idioma'},
- en:{captureMoment:'CAPTURE THE MOMENT',enjoyText:'ENJOY · SMILE · REPEAT',startText:'TAP TO START',settingsText:'SETTINGS',retakeText:'RETAKE',saveText:'SAVE',finishText:'FINISH',cameraHelp:'Tap the white button. The booth will take the photos automatically.',languageLabel:'Language'}
+ es:{captureMoment:'CAPTURA EL MOMENTO',enjoyText:'DISFRUTA · SONRÍE · REPITE',startText:'TOCAR PARA COMENZAR',settingsText:'CONFIGURACIÓN',retakeText:'REPETIR',saveText:'GUARDAR',airdropText:'COMPARTIR · AIRDROP',finishText:'FINALIZAR',cameraHelp:'Toca el botón blanco. Las fotos se tomarán automáticamente.',languageLabel:'Idioma'},
+ en:{captureMoment:'CAPTURE THE MOMENT',enjoyText:'ENJOY · SMILE · REPEAT',startText:'TAP TO START',settingsText:'SETTINGS',retakeText:'RETAKE',saveText:'SAVE',airdropText:'SHARE · AIRDROP',finishText:'FINISH',cameraHelp:'Tap the white button. The booth will take the photos automatically.',languageLabel:'Language'}
 };
 function applyLanguage(lang){
  lang=lang==='en'?'en':'es'; localStorage.setItem('ab_booth_language',lang);
@@ -844,6 +845,22 @@ async function shoot(){
   show('reviewScreen');await uploadAndQR();startAutoReturn();busy=false
 }
 
+async function shareAirdrop(){
+  const blob=currentBlob||await optimizedBlob();
+  const file=new File([blob],`HALO-${Date.now()}.jpg`,{type:'image/jpeg'});
+  try{
+    if(navigator.canShare?.({files:[file]}) && navigator.share){
+      await navigator.share({files:[file],title:'HALO Photo Booth · AB Photography'});
+    }else if(navigator.share){
+      await navigator.share({title:'HALO Photo Booth · AB Photography'});
+    }else{
+      alert('Este navegador no permite abrir Compartir. Usa GUARDAR para conservar la foto.');
+    }
+  }catch(e){
+    if(e?.name!=='AbortError') alert('No se pudo abrir Compartir: '+haloErr(e));
+  }
+}
+
 async function save(){
   const blob=currentBlob||await optimizedBlob();
   const file=new File([blob],'AB-Photobooth.jpg',{type:'image/jpeg'});
@@ -858,6 +875,7 @@ $('shoot').onclick=shoot;
 $('retake').onclick=()=>{cancelAutoReturn();begin()};
 $('back').onclick=()=>{cancelAutoReturn();begin()};
 $('save').onclick=save;
+$('airdrop').onclick=shareAirdrop;
 $('finish').onclick=()=>{cancelAutoReturn();show('home')};
 $('settingsBtn').onclick=()=>eventMode?askPin('settings'):show('settingsScreen');
 $('settingsBack').onclick=()=>{localStorage.setItem('ab_admin_pin',$('adminPin').value||'2468');localStorage.setItem('ab_auto_return',$('autoReturn').value||'30');show('home')};
