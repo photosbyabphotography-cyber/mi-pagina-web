@@ -1,0 +1,14 @@
+HALO PHOTOBOOTH V5.9 — OFFLINE + AIRDROP
+
+- Supabase JS y QRCode ahora están guardados dentro de la carpeta photobooth.
+- La pantalla, cámara, composición, guardado local y AirDrop no dependen de internet.
+- Sin señal, cada composición queda pendiente en IndexedDB.
+- Cuando regresa internet, la cola vuelve a intentar la subida a Supabase.
+- El Service Worker exige guardar todos los archivos esenciales antes de activar una actualización.
+- Las visitas offline regresan siempre a la pantalla principal del photobooth.
+
+IMPORTANTE PARA EL IPAD
+1. Abrir el photobooth una vez con internet después de publicar V5.9.
+2. Esperar a que cargue completamente.
+3. Cerrar y volver a abrir la pantalla de inicio de HALO.
+4. Activar modo avión y hacer una sesión de prueba.

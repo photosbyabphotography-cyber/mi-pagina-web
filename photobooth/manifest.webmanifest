@@ -1,7 +1,9 @@
 {
-  "name": "AB Photography Digital Photobooth",
-  "short_name": "AB Booth",
+  "name": "HALO Photobooth by AB Photography",
+  "short_name": "HALO Booth",
+  "id": "./",
   "start_url": "./",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#080808",
   "theme_color": "#080808"
