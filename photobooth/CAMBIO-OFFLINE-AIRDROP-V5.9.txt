@@ -6,6 +6,7 @@ HALO PHOTOBOOTH V5.9 — OFFLINE + AIRDROP
 - Cuando regresa internet, la cola vuelve a intentar la subida a Supabase.
 - El Service Worker exige guardar todos los archivos esenciales antes de activar una actualización.
 - Las visitas offline regresan siempre a la pantalla principal del photobooth.
+- V5.9.1: Safari activa primero los archivos esenciales; las plantillas grandes se guardan después en segundo plano.
 
 IMPORTANTE PARA EL IPAD
 1. Abrir el photobooth una vez con internet después de publicar V5.9.
